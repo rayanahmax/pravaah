@@ -13,6 +13,14 @@ import { apiError } from "@/lib/api/error";
  */
 export type Authorized<T> = { profile: T } | { response: NextResponse };
 
+export async function requireUser(): Promise<Authorized<Profile>> {
+  const profile = await getProfile();
+  if (!profile) {
+    return { response: apiError("UNAUTHORIZED", "Sign in is required for this operation.") };
+  }
+  return { profile };
+}
+
 export async function requireOperator(): Promise<Authorized<Profile>> {
   const profile = await getProfile();
 

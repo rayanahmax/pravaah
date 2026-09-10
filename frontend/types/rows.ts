@@ -7,6 +7,7 @@
  */
 
 import type { AccessOverride } from "@/lib/capacity";
+import type { PermitStatus } from "@/lib/permit-rules";
 
 export type ProfileRole = "TOURIST" | "DEPARTMENT_OPERATOR";
 
@@ -68,4 +69,17 @@ export type AlertRow = {
   starts_at: string | null;
   ends_at: string | null;
   created_at: string;
+};
+
+export type PermitRow = {
+  id: string;
+  user_id: string;
+  destination_id: string;
+  visit_date: string;
+  group_size: number;
+  status: PermitStatus;
+  contact_information: unknown;
+  emergency_contact: unknown;
+  created_at: string;
+  updated_at: string;
 };

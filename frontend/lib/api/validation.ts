@@ -241,6 +241,71 @@ export function parseQuotaUpdate(body: unknown): ParseResult<{ date: string; quo
   return { ok: true, value: { date: date.value, quota: quota.value } };
 }
 
+/** Body of POST /api/v1/permits — docs/API.md "Create request." */
+export type NewPermit = {
+  destinationId: string;
+  visitDate: string;
+  groupSize: number;
+  contactInformation?: Record<string, unknown> | null;
+  emergencyContact?: Record<string, unknown> | null;
+};
+
+/**
+ * JSONB columns accept an object or null. An array or a bare scalar is refused
+ * because the two contact fields are documented as structured records, and
+ * accepting anything would let a client store a shape nothing can read.
+ */
+function optionalJsonObject(
+  input: Record<string, unknown>,
+  field: string,
+  errors: FieldError[]
+): Record<string, unknown> | null | undefined {
+  const value = input[field];
+  if (value === undefined || value === null) return value as Record<string, unknown> | null;
+  if (typeof value !== "object" || Array.isArray(value)) {
+    errors.push({ field, message: "must be a JSON object or null" });
+    return undefined;
+  }
+  return value as Record<string, unknown>;
+}
+
+export function parsePermitCreate(body: unknown): ParseResult<NewPermit> {
+  const input = asRecord(body);
+  if (!input) return fail("body", "must be a JSON object");
+
+  const errors: FieldError[] = [];
+  const known = ["destination_id", "visit_date", "group_size", "contact_information", "emergency_contact"];
+  const unknown = Object.keys(input).filter((key) => !known.includes(key));
+  if (unknown.length) errors.push({ field: unknown[0], message: "unknown field" });
+
+  const destinationId = parseUuid(input.destination_id, "destination_id");
+  if (!destinationId.ok) errors.push(...destinationId.errors);
+
+  const visitDate = parseIsoDate(input.visit_date, "visit_date");
+  if (!visitDate.ok) errors.push(...visitDate.errors);
+
+  // Bounded only structurally: the real limits are remaining capacity and daily
+  // quota, which lib/permit-rules.ts evaluates.
+  const groupSize = parseInteger(input.group_size, "group_size", { min: 1, max: 100000 });
+  if (!groupSize.ok) errors.push(...groupSize.errors);
+
+  const contact = optionalJsonObject(input, "contact_information", errors);
+  const emergency = optionalJsonObject(input, "emergency_contact", errors);
+
+  if (errors.length) return { ok: false, errors };
+
+  return {
+    ok: true,
+    value: {
+      destinationId: (destinationId as { ok: true; value: string }).value,
+      visitDate: (visitDate as { ok: true; value: string }).value,
+      groupSize: (groupSize as { ok: true; value: number }).value,
+      contactInformation: contact,
+      emergencyContact: emergency,
+    },
+  };
+}
+
 export function firstErrorMessage(errors: FieldError[]): string {
   const first = errors[0];
   return first ? `${first.field}: ${first.message}` : "Invalid request.";

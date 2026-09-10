@@ -18,6 +18,11 @@ export type ApiErrorCode =
   | "QUOTA_EXCEEDED"
   | "INVALID_STATE"
   | "CONFLICT"
+  | "DATE_IN_PAST"
+  | "GROUP_SIZE_INVALID"
+  | "DESTINATION_CLOSED"
+  | "DESTINATION_RESTRICTED"
+  | "NOT_CONFIGURED"
   | "DATABASE_ERROR";
 
 const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
@@ -29,8 +34,35 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   QUOTA_EXCEEDED: 409,
   INVALID_STATE: 409,
   CONFLICT: 409,
+  DATE_IN_PAST: 400,
+  GROUP_SIZE_INVALID: 400,
+  DESTINATION_CLOSED: 409,
+  DESTINATION_RESTRICTED: 409,
+  NOT_CONFIGURED: 409,
   DATABASE_ERROR: 500,
 };
+
+/** Codes the pure permit rules may return; they are already API codes. */
+const RULE_CODES = new Set<string>([
+  "DATE_IN_PAST",
+  "GROUP_SIZE_INVALID",
+  "DESTINATION_CLOSED",
+  "DESTINATION_RESTRICTED",
+  "CAPACITY_EXCEEDED",
+  "QUOTA_EXCEEDED",
+  "NOT_CONFIGURED",
+  "INVALID_STATE",
+]);
+
+/**
+ * Turns a lib/permit-rules rejection into a response. An unrecognised code is
+ * reported as a plain validation failure rather than echoed back, so a client
+ * cannot see codes the contract never defines.
+ */
+export function apiRejection(rejection: { code: string; message: string }): NextResponse {
+  const code = RULE_CODES.has(rejection.code) ? (rejection.code as ApiErrorCode) : "INVALID_STATE";
+  return apiError(code, rejection.message);
+}
 
 export function apiError(code: ApiErrorCode, message: string): NextResponse {
   return NextResponse.json({ error: { code, message } }, { status: STATUS_BY_CODE[code] });
