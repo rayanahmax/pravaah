@@ -4,8 +4,10 @@
 // in this file. The database password is not a Supabase API key: set
 // SUPABASE_DB_PASSWORD to the value from Dashboard -> Project Settings -> Database.
 //
-//   node supabase/run-migration.js                 # every migration, in filename order
-//   node supabase/run-migration.js 003_foo.sql     # one file from migrations/
+//   node supabase/run-migration.js 003_foo.sql     # apply named file(s) from migrations/
+//
+// There is no bulk mode: 001 is not idempotent, and migrations already applied
+// through the dashboard are not recorded anywhere this script could read.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -49,14 +51,24 @@ if (!projectUrl || !dbPassword) {
 // The project ref is the first hostname label: https://abc123.supabase.co -> abc123.
 const projectRef = new URL(projectUrl).hostname.split(".")[0];
 
-const selected = process.argv[2]
-  ? [process.argv[2]]
-  : readdirSync(migrationsDir)
-      .filter((file) => file.endsWith(".sql"))
-      .sort();
+const selected = process.argv.slice(2);
 
-if (selected.length === 0) {
-  console.error("No .sql files found in", migrationsDir);
+if (process.argv.length < 3) {
+  // No bulk mode, deliberately. 001 creates tables without IF NOT EXISTS, so a
+  // blanket "apply everything" run fails partway through the first file on any
+  // database that is already set up, and the later files were applied through the
+  // dashboard rather than recorded anywhere this script could consult.
+  console.error(
+    "Name the migration to apply, e.g.:\n" +
+      `  node supabase/run-migration.js ${
+        readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort()[0] ?? "NNN_name.sql"
+      }\n\nAvailable in ${migrationsDir}:\n` +
+      readdirSync(migrationsDir)
+        .filter((f) => f.endsWith(".sql"))
+        .sort()
+        .map((f) => `  ${f}`)
+        .join("\n")
+  );
   process.exit(1);
 }
 
