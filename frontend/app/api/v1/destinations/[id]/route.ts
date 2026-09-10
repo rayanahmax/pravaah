@@ -1,6 +1,6 @@
 import { findDestination } from "@/services/destinations";
 import { buildCapacityView, toCapacityDto } from "@/services/capacity";
-import { findQuota } from "@/services/quotas";
+import { readQuota } from "@/services/quotas";
 import { listActiveAlerts } from "@/services/alerts";
 import { apiDatabaseError, apiError, apiData } from "@/lib/api/error";
 import { firstErrorMessage, parseIsoDate, parseUuid } from "@/lib/api/validation";
@@ -40,7 +40,7 @@ export async function GET(
     // read does not hide the rest of the response.
     const [capacity, quota, alerts] = await Promise.all([
       buildCapacityView(destination),
-      findQuota(destination.id, parsedDate.value),
+      readQuota(destination.id, parsedDate.value),
       listActiveAlerts(destination.id),
     ]);
 
