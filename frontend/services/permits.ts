@@ -1,225 +1,115 @@
 import { createClient } from "@/lib/supabase/server";
-import {
-  canTransition,
-  evaluateApproval,
-  evaluatePermitEligibility,
-  invalidState,
-  RESERVING_STATUSES,
-  type PermitStatus,
-  type Rejection,
-} from "@/lib/permit-rules";
-import { getOccupancy, findCapacityConfiguration } from "@/services/capacity";
-import { findQuota } from "@/services/quotas";
-import { findDestination } from "@/services/destinations";
-import { todayIsoDate } from "@/lib/date";
-import type { DestinationRow, PermitRow } from "@/types/rows";
+import type { PermitStatus } from "@/lib/permit-rules";
+import type { PermitRow } from "@/types/rows";
 
 /**
  * Permit reads and writes.
  *
- * Nothing here decides policy: eligibility and the state machine live in
- * lib/permit-rules.ts, and row level security plus migration 007's trigger are
- * the boundary the database enforces regardless of this code. The caller's role is
- * taken from the profiles row through an authenticated server client, never from
- * the request (AGENTS.md rules 6 and 7).
+ * The write paths are thin wrappers over the database functions from migrations
+ * 006 and 008. That is the point rather than an abstraction: measuring capacity
+ * and quota and then writing must happen in one transaction behind a lock, so
+ * doing the measurement here in TypeScript would reintroduce exactly the race
+ * those functions exist to close. docs/PRD.md §8 and AGENTS.md rule 7 put the
+ * decision on the server, and the smallest server-side place for it is the
+ * database itself.
+ *
+ * lib/permit-rules.ts remains the readable statement of the same rules, and its
+ * tests keep the two copies aligned: probe 3d fails if the TypeScript state
+ * machine and the SQL one disagree.
+ *
+ * Reads still go through Supabase directly, as the signed-in user, so row level
+ * security decides visibility: a permit belonging to someone else reads as
+ * absent rather than as forbidden.
  */
 
 const PERMIT_COLUMNS =
   "id, user_id, destination_id, visit_date, group_size, status, contact_information, emergency_contact, created_at, updated_at";
 
-export type PermitFacts = {
-  destination: DestinationRow;
-  capacity: number | null;
-  occupancy: number;
-  quota: number | null;
-  booked: number;
-  admitted: number;
-  today: string;
+/** The shape the database functions return: no token material, no contact PII. */
+export type PermitSummary = {
+  id: string;
+  destination_id: string;
+  visit_date: string;
+  group_size: number;
+  status: PermitStatus;
+  created_at: string;
+  updated_at: string;
 };
 
-/** Group sizes still reserved against a destination's visit date. */
-export async function getBookedForDate(
-  destinationId: string,
-  visitDate: string
-): Promise<number> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("permits")
-    .select("id, group_size, status")
-    .eq("destination_id", destinationId)
-    .eq("visit_date", visitDate)
-    .in("status", [...RESERVING_STATUSES]);
+export type PermitRejection = { code: string; message: string };
+export type PermitWriteResult =
+  | { ok: true; permit: PermitSummary }
+  | { ok: false; rejection: PermitRejection };
 
-  if (error) throw new Error(`getBookedForDate: ${error.message}`);
+/** Postgres functions answer with { ok, permit } or { ok:false, code, message }. */
+function toWriteResult(raw: unknown): PermitWriteResult {
+  const value = (raw ?? {}) as {
+    ok?: boolean;
+    permit?: PermitSummary;
+    code?: string;
+    message?: string;
+  };
 
-  return ((data as { group_size: number }[] | null) ?? []).reduce(
-    (total, row) => total + row.group_size,
-    0
-  );
-}
-
-/**
- * Everything the rules need, resolved from the database.
- *
- * Occupancy is derived from active check-ins, and once Phase 8 writes them the
- * figure becomes live. Quota consumption is booked plus admitted; see the note in
- * lib/permit-rules.ts.
- *
- * KNOWN LIMITATION, deliberate and recorded rather than hidden: these are separate
- * reads followed by a write, so two concurrent requests or approvals can each see
- * enough room and both take it. Closing that needs a transactional RPC that locks
- * the destination row and re-checks inside one statement, the same shape as
- * cancel_permit. It should land before check-in exists, because that is when
- * occupancy starts moving under a live queue.
- */
-export async function resolvePermitFacts(
-  destination: DestinationRow,
-  visitDate: string
-): Promise<PermitFacts> {
-  const [capacityConfig, occupancy, quota, booked] = await Promise.all([
-    findCapacityConfiguration(destination.id),
-    getOccupancy(destination.id),
-    findQuota(destination.id, visitDate),
-    getBookedForDate(destination.id, visitDate),
-  ]);
-
+  if (value.ok && value.permit) return { ok: true, permit: value.permit };
   return {
-    destination,
-    capacity: capacityConfig?.maximum_capacity ?? null,
-    occupancy,
-    quota: quota?.quota ?? null,
-    booked,
-    admitted: quota?.visitors_admitted ?? 0,
-    today: todayIsoDate(),
+    ok: false,
+    rejection: {
+      code: value.code ?? "INVALID_STATE",
+      // A function that returned neither shape is a programming error, and saying
+      // so is more useful than reporting an empty refusal.
+      message: value.message ?? "The database did not return a permit outcome.",
+    },
   };
 }
 
-export type CreatePermitInput = {
+/**
+ * A tourist requests a permit. The owner is taken from their token inside the
+ * function, so nothing here can attribute a request to someone else, and no
+ * capacity, quota or status value is accepted from the caller at all.
+ */
+export async function createPermit(input: {
   destinationId: string;
   visitDate: string;
   groupSize: number;
-  contactInformation?: unknown;
-  emergencyContact?: unknown;
-};
-
-export type PermitWriteResult =
-  | { ok: true; permit: PermitRow }
-  | { ok: false; rejection: Rejection };
-
-/** A tourist requests a permit. Stored as PENDING; no decision is made here. */
-export async function createPermit(
-  userId: string,
-  input: CreatePermitInput
-): Promise<PermitWriteResult> {
-  const destination = await findDestination(input.destinationId);
-  if (!destination) {
-    return {
-      ok: false,
-      rejection: { code: "INVALID_STATE", message: "Destination not found." },
-    };
-  }
-
-  const facts = await resolvePermitFacts(destination, input.visitDate);
-  const eligibility = evaluatePermitEligibility({
-    visitDate: input.visitDate,
-    today: facts.today,
-    groupSize: input.groupSize,
-    accessStatus: facts.destination.access_status,
-    capacity: facts.capacity,
-    occupancy: facts.occupancy,
-    quota: facts.quota,
-    booked: facts.booked,
-    admitted: facts.admitted,
-  });
-  if (!eligibility.ok) return { ok: false, rejection: eligibility.rejection };
-
+  contactInformation?: Record<string, unknown> | null;
+  emergencyContact?: Record<string, unknown> | null;
+}): Promise<PermitWriteResult> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("permits")
-    .insert({
-      user_id: userId,
-      destination_id: input.destinationId,
-      visit_date: input.visitDate,
-      group_size: input.groupSize,
-      status: "PENDING",
-      contact_information: input.contactInformation ?? null,
-      emergency_contact: input.emergencyContact ?? null,
-    })
-    .select(PERMIT_COLUMNS)
-    .single<PermitRow>();
+  const { data, error } = await supabase.rpc("request_permit", {
+    p_destination_id: input.destinationId,
+    p_visit_date: input.visitDate,
+    p_group_size: input.groupSize,
+    p_contact_information: input.contactInformation ?? null,
+    p_emergency_contact: input.emergencyContact ?? null,
+  });
 
   if (error) throw new Error(`createPermit: ${error.message}`);
-  return { ok: true, permit: data };
+  return toWriteResult(data);
 }
 
-/**
- * An operator moves a permit through the decision machine.
- *
- * Approval re-runs the full eligibility check, because the numbers that justified
- * a request are not the numbers of the day it is reviewed. A refusal leaves the
- * permit untouched, and the database still has the final say: RLS permits the
- * status change only for operators, and migration 007 makes every other column
- * immutable for everyone else.
- */
+/** The decisions an operator may take; cancellation belongs to the owner. */
+export type PermitDecision = "APPROVED" | "REJECTED" | "RESTRICTED";
+
+/** An operator moves a permit through the decision machine. */
 export async function reviewPermit(
   permitId: string,
-  to: PermitStatus
+  decision: PermitDecision
 ): Promise<PermitWriteResult> {
   const supabase = await createClient();
-  const { data: current, error: readError } = await supabase
-    .from("permits")
-    .select(PERMIT_COLUMNS)
-    .eq("id", permitId)
-    .maybeSingle<PermitRow>();
-
-  if (readError) throw new Error(`reviewPermit: ${readError.message}`);
-  if (!current) {
-    return { ok: false, rejection: { code: "INVALID_STATE", message: "Permit not found." } };
-  }
-
-  if (!canTransition(current.status as PermitStatus, to)) {
-    return {
-      ok: false,
-      rejection: invalidState(current.status as PermitStatus, to),
-    };
-  }
-
-  if (to === "APPROVED") {
-    const destination = await findDestination(current.destination_id);
-    if (!destination) {
-      return { ok: false, rejection: { code: "INVALID_STATE", message: "Destination not found." } };
-    }
-    const facts = await resolvePermitFacts(destination, current.visit_date);
-    const eligibility = evaluateApproval({
-      accessStatus: destination.access_status,
-      capacity: facts.capacity,
-      occupancy: facts.occupancy,
-      quota: facts.quota,
-      booked: facts.booked,
-      admitted: facts.admitted,
-    });
-    if (!eligibility.ok) return { ok: false, rejection: eligibility.rejection };
-  }
-
-  const { data, error } = await supabase
-    .from("permits")
-    .update({ status: to })
-    .eq("id", permitId)
-    .select(PERMIT_COLUMNS)
-    .maybeSingle<PermitRow>();
+  const { data, error } = await supabase.rpc("review_permit", {
+    p_permit_id: permitId,
+    p_decision: decision,
+  });
 
   if (error) throw new Error(`reviewPermit: ${error.message}`);
-  if (!data) {
-    return { ok: false, rejection: { code: "INVALID_STATE", message: "Permit not found." } };
-  }
-  return { ok: true, permit: data };
+  return toWriteResult(data);
 }
 
 /**
- * Owner cancellation, delegated to the cancel_permit RPC.
+ * Owner cancellation, delegated to cancel_permit.
  *
- * The function is deliberately not re-implemented here: it is the only path that
- * assigns exactly one column, and RLS remains the gate underneath it.
+ * Not reimplemented here because that function is the only path that assigns
+ * exactly one column, and it runs as the caller so RLS still guards it.
  */
 export async function cancelPermit(
   permitId: string
@@ -227,9 +117,7 @@ export async function cancelPermit(
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("cancel_permit", { p_permit_id: permitId });
 
-  if (error) {
-    return { ok: false, code: error.code, message: error.message };
-  }
+  if (error) return { ok: false, code: error.code, message: error.message };
   return { ok: true, result: data };
 }
 
@@ -277,8 +165,11 @@ export async function listOperatorPermits(filters: {
   return (data as PermitRow[] | null) ?? [];
 }
 
-/** Permit fields safe to return to a tourist: no token material, no row internals. */
-export function toPermitDto(permit: PermitRow) {
+/**
+ * Row reads still need projecting by hand; the write functions already return this
+ * shape, so the two paths cannot drift into different responses.
+ */
+export function toPermitDto(permit: PermitRow): PermitSummary {
   return {
     id: permit.id,
     destination_id: permit.destination_id,

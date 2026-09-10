@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/api/authz";
-import { createPermit, toPermitDto } from "@/services/permits";
+import { createPermit } from "@/services/permits";
 import { apiDatabaseError, apiError, apiRejection, apiData } from "@/lib/api/error";
 import {
   firstErrorMessage,
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await createPermit(auth.profile.id, {
+    const result = await createPermit({
       destinationId: parsed.value.destinationId,
       visitDate: parsed.value.visitDate,
       groupSize: parsed.value.groupSize,
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       emergencyContact: parsed.value.emergencyContact,
     });
     if (!result.ok) return apiRejection(result.rejection);
-    return apiData(toPermitDto(result.permit), { status: 201 });
+    return apiData(result.permit, { status: 201 });
   } catch (error) {
     return apiDatabaseError("POST /permits", error);
   }

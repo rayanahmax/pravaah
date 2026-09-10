@@ -52,6 +52,9 @@ const RULE_CODES = new Set<string>([
   "QUOTA_EXCEEDED",
   "NOT_CONFIGURED",
   "INVALID_STATE",
+  "NOT_FOUND",
+  "FORBIDDEN",
+  "VALIDATION_ERROR",
 ]);
 
 /**

@@ -1,7 +1,6 @@
-import { reviewPermit, toPermitDto } from "@/services/permits";
+import { reviewPermit, type PermitDecision } from "@/services/permits";
 import { apiDatabaseError, apiError, apiRejection, apiData } from "@/lib/api/error";
 import { firstErrorMessage, parseUuid } from "@/lib/api/validation";
-import type { PermitStatus } from "@/lib/permit-rules";
 
 /**
  * Shared implementation for the three operator decision endpoints
@@ -15,7 +14,7 @@ import type { PermitStatus } from "@/lib/permit-rules";
 export async function handlePermitDecision(
   context: { params: Promise<{ id: string }> },
   request: Request,
-  to: PermitStatus
+  to: PermitDecision
 ) {
   const { id } = await context.params;
   const parsedId = parseUuid(id, "permit_id");
@@ -33,7 +32,7 @@ export async function handlePermitDecision(
   try {
     const result = await reviewPermit(parsedId.value, to);
     if (!result.ok) return apiRejection(result.rejection);
-    return apiData(toPermitDto(result.permit));
+    return apiData(result.permit);
   } catch (error) {
     return apiDatabaseError(`POST /department/permits/${parsedId.value}/${to.toLowerCase()}`, error);
   }
