@@ -32,19 +32,30 @@ type RawCapacityRow = Omit<
   restricted_threshold: string | number | null;
 };
 
+const CAPACITY_COLUMNS =
+  "id, destination_id, maximum_capacity, available_threshold, near_capacity_threshold, restricted_threshold, created_at, updated_at";
+
 function threshold(value: string | number | null, fallback: number): number {
   const n = toNumber(value);
   return n === null || n < 0 ? fallback : n;
 }
 
+function normaliseCapacity(row: RawCapacityRow): CapacityConfigurationRow {
+  return {
+    ...row,
+    available_threshold: threshold(row.available_threshold, DEFAULT_THRESHOLDS.available),
+    near_capacity_threshold: threshold(row.near_capacity_threshold, DEFAULT_THRESHOLDS.nearCapacity),
+    restricted_threshold: threshold(row.restricted_threshold, DEFAULT_THRESHOLDS.restricted),
+  };
+}
+
 /**
- * The most recent configuration for a destination, or null when none exists.
+ * The destination's capacity configuration, or null when none exists.
  *
- * Note: capacity_configurations has no unique constraint on destination_id
- * (docs/DATABASE.md does not specify one), so a destination could in principle
- * hold several rows. Taking the newest is the documented-shaped behaviour we can
- * implement without inventing a schema change; a uniqueness migration should
- * accompany Phase 5.
+ * Migration 004 adds UNIQUE (destination_id), so new writes cannot produce more
+ * than one row. The explicit newest-row selection stays as a safety net for a
+ * database that duplicated before that constraint existed: maybeSingle() raises
+ * PGRST116 when handed several rows, which turned into a 500 on a public read.
  */
 export async function findCapacityConfiguration(
   destinationId: string
@@ -52,23 +63,14 @@ export async function findCapacityConfiguration(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("capacity_configurations")
-    .select(
-      "id, destination_id, maximum_capacity, available_threshold, near_capacity_threshold, restricted_threshold, created_at, updated_at"
-    )
+    .select(CAPACITY_COLUMNS)
     .eq("destination_id", destinationId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle<RawCapacityRow>();
 
   if (error) throw new Error(`findCapacityConfiguration: ${error.message}`);
-  if (!data) return null;
-
-  return {
-    ...data,
-    available_threshold: threshold(data.available_threshold, DEFAULT_THRESHOLDS.available),
-    near_capacity_threshold: threshold(data.near_capacity_threshold, DEFAULT_THRESHOLDS.nearCapacity),
-    restricted_threshold: threshold(data.restricted_threshold, DEFAULT_THRESHOLDS.restricted),
-  };
+  return data ? normaliseCapacity(data) : null;
 }
 
 /**
@@ -136,44 +138,33 @@ export async function buildCapacityView(
 /**
  * Operator capacity write.
  *
- * Updates the newest configuration row, or creates one. Because there is no
- * unique constraint to upsert against this is a read-then-write pair, which is
- * acceptable for a single operator editing a number but is NOT safe against two
- * operators editing at once. The concurrency guarantee Phase 8 needs comes from
- * a unique index plus a transaction, which is a schema change and belongs with
- * the check-in work.
+ * A single INSERT ... ON CONFLICT (destination_id) DO UPDATE, made possible by
+ * the unique index in migration 004. This replaces the earlier read-then-write,
+ * which could create a second configuration row when two operators saved at the
+ * same moment.
+ *
+ * Only maximum_capacity is in the payload, so an existing row keeps its
+ * configured thresholds on update, and a new row takes the schema defaults. The
+ * updated_at trigger maintains the timestamp.
  */
 export async function setCapacity(
   destinationId: string,
   capacity: number
 ): Promise<CapacityConfigurationRow> {
   const supabase = await createClient();
-  const existing = await findCapacityConfiguration(destinationId);
-  const values = { maximum_capacity: capacity, destination_id: destinationId };
-  const columns =
-    "id, destination_id, maximum_capacity, available_threshold, near_capacity_threshold, restricted_threshold, created_at, updated_at";
 
-  const { data, error } = existing
-    ? await supabase
-        .from("capacity_configurations")
-        .update(values)
-        .eq("id", existing.id)
-        .select(columns)
-        .single<RawCapacityRow>()
-    : await supabase
-        .from("capacity_configurations")
-        .insert(values)
-        .select(columns)
-        .single<RawCapacityRow>();
+  const { data, error } = await supabase
+    .from("capacity_configurations")
+    .upsert(
+      { destination_id: destinationId, maximum_capacity: capacity },
+      { onConflict: "destination_id" }
+    )
+    .select(CAPACITY_COLUMNS)
+    .single<RawCapacityRow>();
 
   if (error) throw new Error(`setCapacity: ${error.message}`);
 
-  return {
-    ...data,
-    available_threshold: threshold(data.available_threshold, DEFAULT_THRESHOLDS.available),
-    near_capacity_threshold: threshold(data.near_capacity_threshold, DEFAULT_THRESHOLDS.nearCapacity),
-    restricted_threshold: threshold(data.restricted_threshold, DEFAULT_THRESHOLDS.restricted),
-  };
+  return normaliseCapacity(data);
 }
 
 /**
