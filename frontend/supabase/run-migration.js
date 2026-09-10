@@ -62,10 +62,37 @@ if (selected.length === 0) {
 
 /**
  * Supabase exposes three paths. The poolers require the project ref inside the
- * username; connecting as plain "postgres" through a pooler fails with
- * "tenant/user ... not found". Direct :5432 only works when the project has no
- * IP restriction, so it is attempted first but treated as optional.
+ * username, and their hostname encodes the AWS **region**: asking the wrong
+ * region is answered "tenant/user ... not found", which looks like a credential
+ * problem but is not one. The region is therefore discovered rather than
+ * assumed, with an optional SUPABASE_POOLER_REGION to skip the search.
+ * Direct :5432 only works when the project has no IP restriction, so it is tried
+ * first but treated as optional.
  */
+const POOLER_REGIONS = [
+  "ap-south-1",
+  "ap-southeast-1",
+  "ap-southeast-2",
+  "ap-northeast-1",
+  "ap-northeast-2",
+  "eu-central-1",
+  "eu-west-1",
+  "eu-west-2",
+  "eu-west-3",
+  "eu-north-1",
+  "us-east-1",
+  "us-east-2",
+  "us-west-1",
+  "us-west-2",
+  "ca-central-1",
+  "sa-east-1",
+];
+
+const configuredRegion = env.SUPABASE_POOLER_REGION;
+const regions = configuredRegion
+  ? [configuredRegion, ...POOLER_REGIONS.filter((region) => region !== configuredRegion)]
+  : POOLER_REGIONS;
+
 const connectionAttempts = [
   {
     label: "direct",
@@ -74,20 +101,13 @@ const connectionAttempts = [
     port: 5432,
     ssl: { rejectUnauthorized: false },
   },
-  {
-    label: "session pooler",
-    host: "aws-0-ap-south-1.pooler.supabase.com",
+  ...regions.map((region) => ({
+    label: `session pooler (${region})`,
+    host: `aws-0-${region}.pooler.supabase.com`,
     user: `postgres.${projectRef}`,
     port: 5432,
     ssl: { rejectUnauthorized: false, servername: `${projectRef}.supabase.co` },
-  },
-  {
-    label: "transaction pooler",
-    host: "aws-0-ap-south-1.pooler.supabase.com",
-    user: `postgres.${projectRef}`,
-    port: 6543,
-    ssl: { rejectUnauthorized: false, servername: `${projectRef}.supabase.co` },
-  },
+  })),
 ];
 
 let client = null;

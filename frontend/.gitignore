@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the templates are documentation, not secrets. A root .gitignore cannot
+# re-include what this file ignores, so the exception belongs here.
+!.env.example
+!.env.local.example
 
 # vercel
 .vercel
