@@ -1,0 +1,43 @@
+# --- dependencies and builds ---
+node_modules/
+.next/
+out/
+build/
+
+# --- secrets and local environment ---
+# Committed by accident, a leaked key is still live: Supabase API keys and the
+# Postgres password all work against the hosted project.
+.env
+.env.*
+!.env.local.example
+!.env.example
+*.pem
+
+# --- Supabase CLI scratch (bare name matches at any depth) ---
+.temp/
+
+# --- tooling and local-only notes ---
+.freebuff/
+.opencode/skills/**/__pycache__/
+git-legacy-frontend/
+
+# Session handoff notes and one-off diagnostic scripts (reference local paths).
+/continue.md
+/diagnose.mjs
+/diagnose-*.mjs
+/probe-*.mjs
+/verify-003.mjs
+
+# --- OS and editor ---
+.DS_Store
+Thumbs.db
+
+# --- typescript / npm noise ---
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vercel/
+coverage/
