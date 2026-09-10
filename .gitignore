@@ -9,6 +9,9 @@ build/
 # Postgres password all work against the hosted project.
 .env
 .env.*
+# These re-includes only reach a root-level example file. A nested .gitignore's
+# ignore cannot be undone from its parent, which is why the rule that actually
+# keeps frontend/.env.local.example tracked lives in frontend/.gitignore.
 !.env.local.example
 !.env.example
 *.pem
@@ -19,14 +22,13 @@ build/
 # --- tooling and local-only notes ---
 .freebuff/
 .opencode/skills/**/__pycache__/
-git-legacy-frontend/
 
 # Session handoff notes and one-off diagnostic scripts (reference local paths).
 /continue.md
 /diagnose.mjs
 /diagnose-*.mjs
 /probe-*.mjs
-/verify-003.mjs
+/verify-*.mjs
 
 # --- OS and editor ---
 .DS_Store
