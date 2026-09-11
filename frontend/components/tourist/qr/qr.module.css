@@ -42,6 +42,69 @@
 
 .hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; max-width: 40ch; }
 
+/* Copyable checkpoint token. The card centres everything else; this block is read
+   and selected, so it returns to left-aligned text. */
+.token {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+.token__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.token__label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.token__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: white;
+  padding: 5px 11px;
+  color: var(--accent-strong);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+.token__copy:hover { background: var(--accent-soft); }
+
+.token__value {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 11px 13px;
+  color: #0f172a;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  /* The token is one unbroken 64-character run; without this it overflows. */
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+/* Reserved height so the confirmation does not shift the layout. */
+.token__status { margin: 0; min-height: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
 .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; font-weight: 650; text-decoration: none; }
 .back:hover { color: #0f172a; text-decoration: underline; }
 

@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/auth";
 import { getPermit, getPermitQr } from "@/services/permits";
 import { findDestination } from "@/services/destinations";
 import { QrCode } from "@/components/tourist/qr/qr-code";
+import { TokenCopy } from "@/components/tourist/qr/token-copy";
 import styles from "@/components/tourist/qr/qr.module.css";
 
 export const metadata: Metadata = { title: "Permit QR" };
@@ -86,9 +87,12 @@ export default async function PermitQrPage({
             <QrCode value={qr.qr_token_hash} />
           </div>
           <p className={styles.hint}>
-            The code carries a one-time reference only and reveals nothing about you. Keep this
-            screen until you have checked in.
+            A staff member will scan this at the checkpoint — you do not need the checkpoint
+            scanner yourself. The code is a one-time reference only and reveals nothing about you.
+            Keep this screen until you have checked in.
           </p>
+
+          <TokenCopy token={qr.qr_token_hash} />
         </div>
       </div>
     </div>
