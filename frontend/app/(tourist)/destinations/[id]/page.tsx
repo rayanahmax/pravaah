@@ -147,11 +147,11 @@ export default async function DestinationDetailPage({
             <p>Authoritative weather and advisories for this destination arrive with a later phase.</p>
           </section>
 
-          <section className={styles["stub-panel"]} aria-label="Readiness">
-            <span className={styles["stub-panel__tag"]}><ListChecks size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} /> Coming soon</span>
+          <Link href={`/readiness?destination=${destination.id}`} className={styles["stub-panel"]} aria-label="Readiness check">
+            <span className={styles["stub-panel__tag"]}><ListChecks size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} /> Informational</span>
             <h3>Readiness check</h3>
-            <p>A rule-based readiness questionnaire will help you judge whether this trek suits you.</p>
-          </section>
+            <p>Run a quick, rule-based readiness check for this trek. Advisory only — it is not a medical assessment.</p>
+          </Link>
         </div>
       </div>
     </div>
