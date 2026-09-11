@@ -11,8 +11,19 @@ import { ConsoleError, EmptyDestinations } from "@/components/department/console
 import { describeCapacity, formatPercent } from "@/lib/department-labels";
 import { resolveActiveDestination } from "@/lib/department";
 import { getDepartmentSnapshot } from "@/services/dashboard";
+import { LiveRefresh } from "@/components/department/live-refresh";
 
 export const metadata: Metadata = { title: "Overview" };
+
+const LIVE_TABLES = [
+  "check_ins",
+  "check_outs",
+  "permits",
+  "alerts",
+  "capacity_configurations",
+  "daily_quotas",
+  "destinations",
+];
 
 export default async function OverviewPage({
   searchParams,
@@ -36,6 +47,7 @@ export default async function OverviewPage({
 
   return (
     <>
+      <LiveRefresh tables={LIVE_TABLES} destinationId={destination.id} />
       <PageHeader
         eyebrow="Operations overview"
         title={destination.name}

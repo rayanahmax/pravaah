@@ -12,8 +12,17 @@ import { resolveActiveDestination } from "@/lib/department";
 import { buildCapacityView, findCapacityConfiguration } from "@/services/capacity";
 import { readQuota } from "@/services/quotas";
 import { todayIsoDate } from "@/lib/date";
+import { LiveRefresh } from "@/components/department/live-refresh";
 
 export const metadata: Metadata = { title: "Capacity" };
+
+const LIVE_TABLES = [
+  "capacity_configurations",
+  "daily_quotas",
+  "check_ins",
+  "check_outs",
+  "destinations",
+];
 
 export default async function CapacityPage({
   searchParams,
@@ -41,6 +50,7 @@ export default async function CapacityPage({
 
   return (
     <>
+      <LiveRefresh tables={LIVE_TABLES} destinationId={destination.id} />
       <PageHeader
         eyebrow="Capacity monitoring"
         title="Capacity & quota"

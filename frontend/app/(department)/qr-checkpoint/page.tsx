@@ -8,8 +8,11 @@ import { ConsoleError, EmptyDestinations } from "@/components/department/console
 import { describeCapacity, formatPercent } from "@/lib/department-labels";
 import { resolveActiveDestination } from "@/lib/department";
 import { buildCapacityView } from "@/services/capacity";
+import { LiveRefresh } from "@/components/department/live-refresh";
 
 export const metadata: Metadata = { title: "QR Checkpoint" };
+
+const LIVE_TABLES = ["check_ins", "check_outs", "permits", "capacity_configurations", "destinations"];
 
 const STEPS = [
   { title: "Scan reference", detail: "An opaque token only; no visitor identity is captured." },
@@ -37,6 +40,7 @@ export default async function QrCheckpointPage({
 
   return (
     <div className="checkpoint-page">
+      <LiveRefresh tables={LIVE_TABLES} destinationId={destination.id} />
       <PageHeader
         eyebrow="Field checkpoint"
         title="QR checkpoint"

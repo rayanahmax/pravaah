@@ -11,8 +11,19 @@ import { ConsoleError, EmptyDestinations } from "@/components/department/console
 import { describeCapacity } from "@/lib/department-labels";
 import { resolveActiveDestination } from "@/lib/department";
 import { getDepartmentSnapshot } from "@/services/dashboard";
+import { LiveRefresh } from "@/components/department/live-refresh";
 
 export const metadata: Metadata = { title: "Control Room" };
+
+const LIVE_TABLES = [
+  "check_ins",
+  "check_outs",
+  "permits",
+  "alerts",
+  "capacity_configurations",
+  "daily_quotas",
+  "destinations",
+];
 
 const CONTROLS = [
   { href: "/capacity", icon: Gauge, title: "Capacity & quota", description: "Set carrying capacity and the daily permit intake for this destination." },
@@ -41,6 +52,7 @@ export default async function ControlRoomPage({
 
   return (
     <>
+      <LiveRefresh tables={LIVE_TABLES} destinationId={destination.id} />
       <PageHeader
         eyebrow="Department controls"
         title="Control room"

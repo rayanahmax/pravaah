@@ -9,9 +9,12 @@ import { ConsoleError, EmptyDestinations } from "@/components/department/console
 import { describeDay, permitBadge } from "@/lib/department-labels";
 import { resolveActiveDestination } from "@/lib/department";
 import { listOperatorPermits } from "@/services/permits";
+import { LiveRefresh } from "@/components/department/live-refresh";
 import type { PermitStatus } from "@/lib/permit-rules";
 
 export const metadata: Metadata = { title: "Permits" };
+
+const LIVE_TABLES = ["permits", "capacity_configurations", "daily_quotas", "destinations"];
 
 const FILTERS: { value: string; label: string; status?: PermitStatus }[] = [
   { value: "", label: "All" },
@@ -55,6 +58,7 @@ export default async function PermitsPage({
 
   return (
     <>
+      <LiveRefresh tables={LIVE_TABLES} destinationId={destination.id} />
       <PageHeader
         eyebrow="Permit status tracker"
         title="Permit queue"
