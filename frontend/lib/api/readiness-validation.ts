@@ -1,17 +1,17 @@
 import {
-  ACTIVITY_LEVELS,
-  ALTITUDE_LEVELS,
-  TREKKING_LEVELS,
-  type ActivityLevel,
-  type HighAltitudeExperience,
+  AGE_ANSWERS,
+  EXPERIENCE_LEVELS,
+  YES_NO,
+  type AgeAnswer,
+  type ExperienceLevel,
   type ReadinessAnswers,
-  type TrekkingExperience,
+  type YesNo,
 } from "@/lib/readiness";
 import { parseIsoDate, parseUuid, type FieldError, type ParseResult } from "./validation";
 
 /**
  * Request validation for POST /api/v1/readiness/assess. Kept in its own module so
- * lib/api/validation.ts stays dependency-free; this one may lean on the readiness
+ * lib/api/validation.ts stays dependency-free; this one leans on the readiness
  * engine's enum definitions so the two never drift apart.
  */
 export type ReadinessRequest = {
@@ -48,17 +48,33 @@ export function parseReadinessAssess(body: unknown): ParseResult<ReadinessReques
     errors.push({ field: "answers", message: "must be an object" });
   } else {
     const a = raw as Record<string, unknown>;
-    const trekOk = isMember(a.trekkingExperience, TREKKING_LEVELS);
-    const altOk = isMember(a.highAltitudeExperience, ALTITUDE_LEVELS);
-    const actOk = isMember(a.activityLevel, ACTIVITY_LEVELS);
-    if (!trekOk) errors.push({ field: "answers.trekkingExperience", message: `must be one of: ${TREKKING_LEVELS.join(", ")}` });
-    if (!altOk) errors.push({ field: "answers.highAltitudeExperience", message: `must be one of: ${ALTITUDE_LEVELS.join(", ")}` });
-    if (!actOk) errors.push({ field: "answers.activityLevel", message: `must be one of: ${ACTIVITY_LEVELS.join(", ")}` });
-    if (trekOk && altOk && actOk) {
+
+    const checks: Array<[unknown, readonly string[], string]> = [
+      [a.previousExperience, EXPERIENCE_LEVELS, "previousExperience"],
+      [a.physicalPreparation, YES_NO, "physicalPreparation"],
+      [a.durationReady, YES_NO, "durationReady"],
+      [a.elevationExperience, YES_NO, "elevationExperience"],
+      [a.equipment, YES_NO, "equipment"],
+      [a.weatherPreparation, YES_NO, "weatherPreparation"],
+      [a.routeKnowledge, YES_NO, "routeKnowledge"],
+      [a.ageRequirement, AGE_ANSWERS, "ageRequirement"],
+    ];
+    const allOk = checks.every(([value, allowed, name]) => {
+      const ok = isMember(value, allowed);
+      if (!ok) errors.push({ field: `answers.${name}`, message: `must be one of: ${allowed.join(", ")}` });
+      return ok;
+    });
+
+    if (allOk) {
       answers = {
-        trekkingExperience: a.trekkingExperience as TrekkingExperience,
-        highAltitudeExperience: a.highAltitudeExperience as HighAltitudeExperience,
-        activityLevel: a.activityLevel as ActivityLevel,
+        previousExperience: a.previousExperience as ExperienceLevel,
+        physicalPreparation: a.physicalPreparation as YesNo,
+        durationReady: a.durationReady as YesNo,
+        elevationExperience: a.elevationExperience as YesNo,
+        equipment: a.equipment as YesNo,
+        weatherPreparation: a.weatherPreparation as YesNo,
+        routeKnowledge: a.routeKnowledge as YesNo,
+        ageRequirement: a.ageRequirement as AgeAnswer,
       };
     }
   }

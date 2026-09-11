@@ -5,14 +5,14 @@ import { Loader2, Sparkles, TriangleAlert } from "lucide-react";
 import { apiPost } from "@/lib/client-api";
 import { StatusPill, type PillTone } from "@/components/tourist/ui";
 import {
-  ACTIVITY_LEVELS,
-  ALTITUDE_LEVELS,
-  TREKKING_LEVELS,
-  type ActivityLevel,
-  type HighAltitudeExperience,
+  AGE_ANSWERS,
+  EXPERIENCE_LEVELS,
+  YES_NO,
+  type AgeAnswer,
+  type ExperienceLevel,
   type ReadinessAnswers,
   type ReadinessLevel,
-  type TrekkingExperience,
+  type YesNo,
 } from "@/lib/readiness";
 import styles from "./readiness.module.css";
 
@@ -32,6 +32,33 @@ const LEVEL_LABEL: Record<ReadinessLevel, string> = {
   PREPARE_MORE: "More preparation advised",
 };
 
+const YES_NO_LABEL: Record<YesNo, string> = { yes: "Yes", no: "No" };
+const AGE_LABEL: Record<AgeAnswer, string> = {
+  yes: "Yes",
+  no: "No",
+  not_applicable: "Not applicable",
+};
+
+const YES_NO_QUESTIONS: Array<{ key: keyof ReadinessAnswers; label: string }> = [
+  { key: "physicalPreparation", label: "Physical preparation — Are you comfortable walking/trekking for several hours?" },
+  { key: "durationReady", label: "Duration — Can you comfortably manage the expected duration of the trek?" },
+  { key: "elevationExperience", label: "Elevation — Have you previously travelled to a similar elevation?" },
+  { key: "equipment", label: "Equipment — Do you have the required footwear, clothing, water, etc.?" },
+  { key: "weatherPreparation", label: "Weather preparation — Have you trekked in similar expected weather conditions?" },
+  { key: "routeKnowledge", label: "Route knowledge — Have you reviewed the route difficulty and requirements?" },
+];
+
+const DEFAULTS: ReadinessAnswers = {
+  previousExperience: "none",
+  physicalPreparation: "yes",
+  durationReady: "yes",
+  elevationExperience: "yes",
+  equipment: "yes",
+  weatherPreparation: "yes",
+  routeKnowledge: "yes",
+  ageRequirement: "not_applicable",
+};
+
 function levelTone(level: ReadinessLevel): PillTone {
   if (level === "READY") return "green";
   if (level === "PROCEED_WITH_CAUTION") return "pending";
@@ -39,10 +66,11 @@ function levelTone(level: ReadinessLevel): PillTone {
 }
 
 /**
- * The readiness questionnaire. It posts answers to /api/v1/readiness/assess and
- * shows the deterministic result the server computed. The AI explanation, when
- * present, is clearly labelled as an informational, non-authoritative add-on.
- * Nothing here gates a permit — it is guidance only (PRD §13-14).
+ * The readiness questionnaire (eight self-assessment questions). It posts answers
+ * to /api/v1/readiness/assess and shows the deterministic result the server
+ * computed. The AI explanation, when present, is clearly labelled informational
+ * and non-authoritative. Nothing here gates a permit — it is guidance only
+ * (PRD §13-14).
  */
 export function ReadinessForm({
   destinationId,
@@ -51,12 +79,14 @@ export function ReadinessForm({
   destinationId: string;
   destinationName: string;
 }) {
-  const [trekkingExperience, setTrekking] = useState<TrekkingExperience>("beginner");
-  const [highAltitudeExperience, setAltitude] = useState<HighAltitudeExperience>("none");
-  const [activityLevel, setActivity] = useState<ActivityLevel>("moderate");
+  const [answers, setAnswers] = useState<ReadinessAnswers>(DEFAULTS);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AssessResult | null>(null);
+
+  function set<K extends keyof ReadinessAnswers>(key: K, value: ReadinessAnswers[K]) {
+    setAnswers((prev) => ({ ...prev, [key]: value }));
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -64,7 +94,6 @@ export function ReadinessForm({
     setPending(true);
     setError(null);
 
-    const answers: ReadinessAnswers = { trekkingExperience, highAltitudeExperience, activityLevel };
     const outcome = await apiPost<AssessResult>("/api/v1/readiness/assess", {
       destination_id: destinationId,
       answers,
@@ -87,21 +116,43 @@ export function ReadinessForm({
 
       <form className={styles.form} onSubmit={onSubmit}>
         <label className={styles.field}>
-          <span>Trekking experience</span>
-          <select value={trekkingExperience} onChange={(e) => setTrekking(e.target.value as TrekkingExperience)} disabled={pending}>
-            {TREKKING_LEVELS.map((v) => <option key={v} value={v}>{v}</option>)}
+          <span>Previous experience — Have you visited a high-altitude / trekking destination before?</span>
+          <select
+            value={answers.previousExperience}
+            onChange={(e) => set("previousExperience", e.target.value as ExperienceLevel)}
+            disabled={pending}
+          >
+            {EXPERIENCE_LEVELS.map((v) => (
+              <option key={v} value={v}>{v === "none" ? "No experience" : v === "some" ? "Some" : "Experienced"}</option>
+            ))}
           </select>
         </label>
+
+        {YES_NO_QUESTIONS.map(({ key, label }) => (
+          <label key={key} className={styles.field}>
+            <span>{label}</span>
+            <select
+              value={answers[key] as YesNo}
+              onChange={(e) => set(key, e.target.value as YesNo)}
+              disabled={pending}
+            >
+              {YES_NO.map((v) => (
+                <option key={v} value={v}>{YES_NO_LABEL[v]}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+
         <label className={styles.field}>
-          <span>High-altitude experience</span>
-          <select value={highAltitudeExperience} onChange={(e) => setAltitude(e.target.value as HighAltitudeExperience)} disabled={pending}>
-            {ALTITUDE_LEVELS.map((v) => <option key={v} value={v}>{v}</option>)}
-          </select>
-        </label>
-        <label className={styles.field}>
-          <span>Typical activity level</span>
-          <select value={activityLevel} onChange={(e) => setActivity(e.target.value as ActivityLevel)} disabled={pending}>
-            {ACTIVITY_LEVELS.map((v) => <option key={v} value={v}>{v}</option>)}
+          <span>Age requirement — Does the visitor meet the destination&apos;s minimum age requirement, if applicable?</span>
+          <select
+            value={answers.ageRequirement}
+            onChange={(e) => set("ageRequirement", e.target.value as AgeAnswer)}
+            disabled={pending}
+          >
+            {AGE_ANSWERS.map((v) => (
+              <option key={v} value={v}>{AGE_LABEL[v]}</option>
+            ))}
           </select>
         </label>
 

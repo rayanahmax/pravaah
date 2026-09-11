@@ -2,28 +2,35 @@
  * Readiness — the deterministic rule engine (Phase 14, PRD §13).
  *
  * Pure, dependency-free and clock-free: the same answers always produce the same
- * result, which is what makes it testable and trustworthy. It is deliberately
- * INFORMATIONAL — it never claims medical fitness, never guarantees safety, and
- * is never an access decision. Permit approval and capacity are decided
- * elsewhere and are unaffected by anything here (PRD §13, AGENTS rules 12-13).
+ * result, which is what makes it testable and trustworthy. It is INFORMATIONAL —
+ * it never claims medical fitness, never guarantees safety, and is never an access
+ * decision. Permit approval and capacity are decided elsewhere and are unaffected
+ * by anything here (PRD §13, AGENTS rules 12-13).
  *
- * The optional AI layer (lib/readiness-ai.ts) only ever explains the output of
- * this function; it never feeds into it.
+ * The questionnaire is an eight-point self-assessment. Prior experience is graded;
+ * the rest are yes/no checks; the minimum-age item is a gate that can only make
+ * the advice stricter, never admit someone. The optional AI layer
+ * (lib/readiness-ai.ts) only ever explains the output of this function.
  */
 
-export const TREKKING_LEVELS = ["none", "beginner", "moderate", "experienced"] as const;
-export type TrekkingExperience = (typeof TREKKING_LEVELS)[number];
+export const EXPERIENCE_LEVELS = ["none", "some", "experienced"] as const;
+export type ExperienceLevel = (typeof EXPERIENCE_LEVELS)[number];
 
-export const ALTITUDE_LEVELS = ["none", "some", "experienced"] as const;
-export type HighAltitudeExperience = (typeof ALTITUDE_LEVELS)[number];
+export const YES_NO = ["yes", "no"] as const;
+export type YesNo = (typeof YES_NO)[number];
 
-export const ACTIVITY_LEVELS = ["low", "moderate", "high"] as const;
-export type ActivityLevel = (typeof ACTIVITY_LEVELS)[number];
+export const AGE_ANSWERS = ["yes", "no", "not_applicable"] as const;
+export type AgeAnswer = (typeof AGE_ANSWERS)[number];
 
 export type ReadinessAnswers = {
-  trekkingExperience: TrekkingExperience;
-  highAltitudeExperience: HighAltitudeExperience;
-  activityLevel: ActivityLevel;
+  previousExperience: ExperienceLevel;
+  physicalPreparation: YesNo;
+  durationReady: YesNo;
+  elevationExperience: YesNo;
+  equipment: YesNo;
+  weatherPreparation: YesNo;
+  routeKnowledge: YesNo;
+  ageRequirement: AgeAnswer;
 };
 
 export type ReadinessLevel = "READY" | "PROCEED_WITH_CAUTION" | "PREPARE_MORE";
@@ -43,10 +50,9 @@ const DISCLAIMER =
   "guarantee safety. Consult a qualified professional about your fitness, and follow all posted " +
   "rules, weather advisories and guide instructions.";
 
-const TREKKING_POINTS: Record<TrekkingExperience, number> = { none: 0, beginner: 1, moderate: 2, experienced: 3 };
-const ALTITUDE_POINTS: Record<HighAltitudeExperience, number> = { none: 0, some: 2, experienced: 3 };
-const ACTIVITY_POINTS: Record<ActivityLevel, number> = { low: 0, moderate: 1, high: 2 };
-const MAX_POINTS = 8;
+const EXPERIENCE_POINTS: Record<ExperienceLevel, number> = { none: 0, some: 2, experienced: 3 };
+// Prior experience is worth up to 3; the six yes/no checks are worth 1 each.
+const MAX_POINTS = 3 + 6;
 
 export type DestinationDifficulty = "EASY" | "MODERATE" | "HARD";
 
@@ -72,9 +78,10 @@ function clampScore(n: number): number {
 }
 
 /**
- * Assess readiness deterministically. `destinationDifficulty` contextualises the
- * bar: a demanding route asks for more experience than an easy one. The result is
- * advisory; it never overrides an access decision.
+ * Assess readiness deterministically. `destinationDifficulty` raises the bar for a
+ * demanding route and relaxes it for an easy one. A "no" on the minimum-age gate
+ * caps the level at PREPARE_MORE and adds a prominent advisory — it can never
+ * admit someone, only warn them.
  */
 export function assessReadiness(
   answers: ReadinessAnswers,
@@ -82,49 +89,51 @@ export function assessReadiness(
 ): ReadinessResult {
   const difficulty = normalizeDifficulty(destinationDifficulty);
 
-  const points =
-    TREKKING_POINTS[answers.trekkingExperience] +
-    ALTITUDE_POINTS[answers.highAltitudeExperience] +
-    ACTIVITY_POINTS[answers.activityLevel];
+  let points = EXPERIENCE_POINTS[answers.previousExperience];
+  const strengths: string[] = [];
+  const advisories: string[] = [];
+
+  if (answers.previousExperience === "experienced") {
+    strengths.push("Extensive prior trekking / high-altitude experience.");
+  } else if (answers.previousExperience === "some") {
+    strengths.push("Some prior trekking / high-altitude experience.");
+  } else {
+    advisories.push("You have little prior trekking or high-altitude experience — consider a guided group or an easier route first.");
+  }
+
+  const yesChecks: Array<[YesNo, string, string]> = [
+    [answers.physicalPreparation, "Comfortable walking for several hours.", "This trek involves several hours on foot — build up your endurance beforehand."],
+    [answers.durationReady, "Can manage the expected duration.", "The expected duration may be more than you are comfortable with; consider a shorter route."],
+    [answers.elevationExperience, "Has travelled to a similar elevation.", "You have not been to a similar elevation — plan for gradual acclimatisation."],
+    [answers.equipment, "Has the required gear.", "Make sure you have proper footwear, clothing and water before you go."],
+    [answers.weatherPreparation, "Has trained in similar conditions.", "You have not trained in similar conditions — prepare for the expected weather."],
+    [answers.routeKnowledge, "Has reviewed the route.", "Review the route difficulty and requirements before your visit."],
+  ];
+
+  for (const [value, strength, advice] of yesChecks) {
+    if (value === "yes") {
+      points += 1;
+      strengths.push(strength);
+    } else {
+      advisories.push(advice);
+    }
+  }
+
   const score = clampScore((points / MAX_POINTS) * 100);
 
-  // A harder destination raises the thresholds; an easier one relaxes them.
   const shift = difficulty === "HARD" ? 15 : difficulty === "EASY" ? -15 : 0;
   const readyAt = clampScore(70 + shift);
   const cautionAt = clampScore(40 + shift);
 
-  const level: ReadinessLevel =
+  let level: ReadinessLevel =
     score >= readyAt ? "READY" : score >= cautionAt ? "PROCEED_WITH_CAUTION" : "PREPARE_MORE";
 
-  const strengths: string[] = [];
-  const advisories: string[] = [];
-
-  if (answers.trekkingExperience === "experienced") strengths.push("Extensive trekking experience.");
-  else if (answers.trekkingExperience === "moderate") strengths.push("Some trekking experience.");
-
-  if (answers.highAltitudeExperience === "experienced") strengths.push("Comfortable at altitude.");
-  else if (answers.highAltitudeExperience === "some") strengths.push("Some high-altitude exposure.");
-
-  if (answers.activityLevel === "high") strengths.push("High activity level.");
-  else if (answers.activityLevel === "moderate") strengths.push("Moderate activity level.");
-
-  if (difficulty === "HARD") {
-    if (answers.trekkingExperience === "none" || answers.trekkingExperience === "beginner") {
-      advisories.push("This route is demanding for limited trekking experience — consider a guided group or an easier route first.");
-    }
-    if (answers.highAltitudeExperience === "none") {
-      advisories.push("Plan gradual acclimatisation for the altitude on this route.");
-    }
-  } else if (difficulty === "MODERATE" && answers.trekkingExperience === "none") {
-    advisories.push("A short practice trek is advisable before attempting this route.");
+  // The age gate can only make the advice stricter, never admit the visitor.
+  if (answers.ageRequirement === "no") {
+    level = "PREPARE_MORE";
+    advisories.unshift("You may not meet this destination's minimum-age requirement — verify it with the department before travelling.");
   }
 
-  if (answers.activityLevel === "low") {
-    advisories.push("Build up your stamina beforehand — this trip involves sustained physical effort.");
-  }
-  if (level === "PREPARE_MORE") {
-    advisories.push("Consider preparing further or choosing an easier destination before you go.");
-  }
   if (level !== "READY") {
     advisories.push("Check the latest weather and any active alerts on the day of your visit.");
   }
