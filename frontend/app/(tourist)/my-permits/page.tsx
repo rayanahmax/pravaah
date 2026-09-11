@@ -2,17 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { EmptyState, StatusPill } from "@/components/tourist/ui";
-import { describeDay, permitBadge } from "@/lib/department-labels";
+import { describeDay, permitBadge, permitReference } from "@/lib/department-labels";
 import { requireAuth } from "@/lib/auth";
 import { listMyPermits } from "@/services/permits";
 import { listDestinations } from "@/services/destinations";
 import styles from "@/components/tourist/permits/permits.module.css";
 
 export const metadata: Metadata = { title: "My permits" };
-
-function shortRef(id: string): string {
-  return `PRM-${id.slice(-4).toUpperCase()}`;
-}
 
 /**
  * The tourist's own permits. Requires a signed-in visitor; reads only their rows
@@ -59,7 +55,7 @@ export default async function MyPermitsPage() {
                   </span>
                 </div>
                 <div className={styles["row__right"]}>
-                  <span className={styles["row__ref"]}>{shortRef(permit.id)}</span>
+                  <span className={styles["row__ref"]}>{permitReference(permit.id)}</span>
                   <StatusPill tone={badge.tone}>{badge.label}</StatusPill>
                 </div>
               </Link>

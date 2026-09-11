@@ -89,17 +89,26 @@ export function CheckpointScanner({ destinationName }: { destinationName: string
           <label className="field">
             <span>Permit token</span>
             <input
+              id="permit-token"
               className="token-input"
               type="text"
               inputMode="text"
               autoComplete="off"
               spellCheck={false}
-              placeholder="Paste the scanned token"
+              aria-describedby="permit-token-hint"
+              placeholder="Paste the long code the QR encodes"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               disabled={pending !== null}
             />
           </label>
+
+          <p className="scanner-hint" id="permit-token-hint">
+            <span>
+              The token is the long code the QR encodes. The <code>PRM-…</code> reference on the
+              pass only identifies the permit — it is not accepted here.
+            </span>
+          </p>
 
           <div className="scanner-form__actions">
             <button type="button" className="primary-button" disabled={pending !== null || !trimmed} onClick={() => submit("check-in")}>

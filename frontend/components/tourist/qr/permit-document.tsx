@@ -1,7 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 import { StatusPill, type PillTone } from "@/components/tourist/ui";
 import { readPermitDetails } from "@/lib/permit-details";
-import { describeDay } from "@/lib/department-labels";
+import { describeDay, permitReference } from "@/lib/department-labels";
 import type { PermitStatus } from "@/lib/permit-rules";
 import type { DestinationRow, PermitRow } from "@/types/rows";
 import styles from "./permit-document.module.css";
@@ -18,10 +18,6 @@ const DOC_STATUS: Record<PermitStatus, { label: string; tone: PillTone }> = {
   CANCELLED: { label: "Cancelled", tone: "default" },
   EXPIRED: { label: "Expired", tone: "default" },
 };
-
-function shortRef(id: string): string {
-  return `PRM-${id.slice(-6).toUpperCase()}`;
-}
 
 function text(value: unknown): string {
   return typeof value === "string" && value.trim() !== "" ? value : "—";
@@ -82,8 +78,8 @@ export function PermitDocument({
 
       <div className={styles["doc__statusbar"]}>
         <span className={styles["doc__id"]}>
-          <small>Permit ID</small>
-          {shortRef(permit.id)}
+          <small>Permit reference</small>
+          {permitReference(permit.id)}
         </span>
         <StatusPill tone={status.tone} dot>{status.label}</StatusPill>
       </div>

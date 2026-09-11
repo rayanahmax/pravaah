@@ -72,6 +72,31 @@ export function permitBadge(status: PermitStatus): { label: string; tone: BadgeT
   return { label: PERMIT_STATUS_LABEL[status], tone: PERMIT_STATUS_TONE[status] };
 }
 
+/** How many trailing UUID characters a reference shows. */
+const REFERENCE_LENGTH = 6;
+
+/**
+ * The human-readable permit reference, e.g. `PRM-D8DE22`. Single source of truth:
+ * the review queue, the tourist's permit list, the visitor home and the printed
+ * pass must all agree, or a visitor reading their code off the pass and a staff
+ * member reading it off the queue are looking at two different strings for the
+ * same permit.
+ *
+ * Six characters, matching the certificate, because that is the artefact a
+ * checkpoint officer actually reads; a four-character tail also collides far more
+ * often once a queue has hundreds of rows.
+ *
+ * Privacy-preserving (API rule 4): a UUID tail reveals no owner identity and is
+ * not the permit's primary key.
+ *
+ * This is a label, never a credential. The checkpoint scanner accepts only the
+ * opaque QR token stored in `permits.qr_token_hash`; a reference pasted there is
+ * meant to be refused.
+ */
+export function permitReference(id: string): string {
+  return `PRM-${id.slice(-REFERENCE_LENGTH).toUpperCase()}`;
+}
+
 export function severityTone(severity: AlertRow["severity"]): BadgeTone {
   if (severity === "CRITICAL") return "restricted";
   if (severity === "WARNING") return "restricted";

@@ -6,7 +6,7 @@ import { Badge } from "@/components/department/badge";
 import { DestinationSwitcher } from "@/components/department/destination-switcher";
 import { PermitActions } from "@/components/department/permit-actions";
 import { ConsoleError, EmptyDestinations } from "@/components/department/console-states";
-import { describeDay, permitBadge } from "@/lib/department-labels";
+import { describeDay, permitBadge, permitReference } from "@/lib/department-labels";
 import { resolveActiveDestination } from "@/lib/department";
 import { listOperatorPermits } from "@/services/permits";
 import { LiveRefresh } from "@/components/department/live-refresh";
@@ -26,13 +26,10 @@ const FILTERS: { value: string; label: string; status?: PermitStatus }[] = [
 ];
 
 /**
- * A privacy-preserving permit reference: enough to tell rows apart on the review
- * queue without surfacing the full UUID or any owner identity (API rule 4).
+ * The department permit review queue. Rows are identified by the shared
+ * `permitReference` label rather than a full UUID or owner identity (API rule 4);
+ * every decision is made by the server through the review endpoints.
  */
-function shortReference(id: string): string {
-  return `PRM-${id.slice(-4).toUpperCase()}`;
-}
-
 export default async function PermitsPage({
   searchParams,
 }: {
@@ -123,7 +120,7 @@ export default async function PermitsPage({
                   const badge = permitBadge(permit.status);
                   return (
                     <tr key={permit.id}>
-                      <td><span className="reference">{shortReference(permit.id)}</span></td>
+                      <td><span className="reference">{permitReference(permit.id)}</span></td>
                       <td>{describeDay(permit.visit_date)}</td>
                       <td>{permit.group_size}</td>
                       <td><Badge tone={badge.tone}>{badge.label}</Badge></td>
