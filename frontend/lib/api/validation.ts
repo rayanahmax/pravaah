@@ -306,6 +306,20 @@ export function parsePermitCreate(body: unknown): ParseResult<NewPermit> {
   };
 }
 
+/** Body of POST /api/v1/checkins — docs/API.md shows { "qr_token": "secure-token" }. */
+export function parseCheckIn(body: unknown): ParseResult<{ qr_token: string }> {
+  const input = asRecord(body);
+  if (!input) return fail("body", "must be a JSON object");
+  const unknown = Object.keys(input).filter((k) => k !== "qr_token");
+  if (unknown.length) return fail(unknown[0], "unknown field");
+
+  const qrToken = input.qr_token;
+  if (typeof qrToken !== "string" || !qrToken.trim()) {
+    return fail("qr_token", "is required and must be text");
+  }
+  return { ok: true, value: { qr_token: qrToken.trim() } };
+}
+
 export function firstErrorMessage(errors: FieldError[]): string {
   const first = errors[0];
   return first ? `${first.field}: ${first.message}` : "Invalid request.";
