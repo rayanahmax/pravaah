@@ -1,0 +1,253 @@
+/*
+ * Floating SOS dock (tourist shell).
+ *
+ * Colours borrow the app's existing critical red (#fef2f2 / #fecaca / #991b1b,
+ * same family as `.status-badge--critical` in globals.css) so an emergency action
+ * reads as urgent without introducing a new palette. Elevation and duration tokens
+ * come from tourist-motion.css, which the shell already loads; any @keyframes has
+ * to live in this file, because a CSS Module rewrites animation names per file.
+ *
+ * The dock clears the fixed mobile tab bar the same way the shell's own padding
+ * does — 62px + the device safe-area inset — so it is never covered by nav.
+ */
+
+.dock {
+  position: fixed;
+  z-index: 45;
+  right: 14px;
+  bottom: calc(62px + env(safe-area-inset-bottom) + 14px);
+}
+
+@media (min-width: 720px) {
+  .dock {
+    right: 24px;
+    bottom: 24px;
+  }
+}
+
+/* ---- The button ---- */
+
+.fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 18px 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(185, 28, 28, 0.34), var(--elev-2);
+  touch-action: manipulation;
+  user-select: none;
+  transition: transform var(--dur-fast) var(--ease-enter),
+    box-shadow var(--dur-fast) var(--ease-enter), filter var(--dur-fast) var(--ease-enter);
+}
+.fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(185, 28, 28, 0.4), var(--elev-3);
+  filter: saturate(1.05);
+}
+.fab:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
+}
+.fab:focus-visible {
+  outline: 3px solid #fecaca;
+  outline-offset: 2px;
+}
+
+/* ---- The disclosure panel ---- */
+
+.panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(340px, calc(100vw - 28px));
+  max-height: min(70vh, 440px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-top: 3px solid #dc2626;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--elev-4);
+  animation: prv-sos-pop var(--dur-base) var(--ease-enter);
+}
+
+@keyframes prv-sos-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.panelTitle {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 800;
+}
+.close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+.close:hover {
+  background: #f1f5f9;
+  color: var(--foreground);
+}
+
+/* ---- Primary emergency line ---- */
+
+.primaryCall {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.primaryCall:hover {
+  background: #fee2e2;
+}
+.primaryCall:focus-visible {
+  outline: 3px solid #fecaca;
+  outline-offset: 2px;
+}
+.primaryCall strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.primaryCall small {
+  display: block;
+  margin-top: 2px;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---- Saved emergency contacts ---- */
+
+.contacts {
+  margin-top: 14px;
+}
+.contactsLabel {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.contactList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #ffffff;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+.contact:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.contact:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+.contactWho {
+  display: grid;
+  min-width: 0;
+}
+.contactWho strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.contactWho small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.contactPhone {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* ---- Fallback text ---- */
+
+.empty {
+  margin: 14px 0 0;
+  padding: 12px 13px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 14px 0 0;
+  color: #94a3b8;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.note svg {
+  flex: none;
+  margin-top: 1px;
+}

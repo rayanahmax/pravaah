@@ -2,6 +2,12 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
+import { listMyPermits } from "@/services/permits";
+import {
+  extractEmergencyContacts,
+  type EmergencyContact,
+} from "@/lib/emergency-contacts";
+import { SosDock } from "@/components/tourist/sos/sos-dock";
 import { TouristHeaderNav, TouristMobileNav } from "./tourist-nav";
 import "../tourist-motion.css";
 import styles from "./tourist-shell.module.css";
@@ -20,6 +26,19 @@ import styles from "./tourist-shell.module.css";
  */
 export default async function TouristLayout({ children }: { children: ReactNode }) {
   const user = await getUser();
+
+  // The SOS dock can offer the visitor's own emergency contact only if they are
+  // signed in. This reads existing data through the same RLS-scoped service the
+  // "My permits" page uses — no new endpoint, no client-side Supabase call — and a
+  // failure degrades to "no saved contact" rather than taking the shell down.
+  let emergencyContacts: EmergencyContact[] = [];
+  if (user) {
+    try {
+      emergencyContacts = extractEmergencyContacts(await listMyPermits(user.id));
+    } catch {
+      emergencyContacts = [];
+    }
+  }
 
   return (
     <div className={styles.shell}>
@@ -79,6 +98,8 @@ export default async function TouristLayout({ children }: { children: ReactNode 
       </footer>
 
       <TouristMobileNav />
+
+      <SosDock contacts={emergencyContacts} signedIn={Boolean(user)} />
     </div>
   );
 }
