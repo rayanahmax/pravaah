@@ -34,8 +34,9 @@
   top: 0;
   z-index: 20;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: saturate(1.4) blur(6px);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(1.5) blur(12px);
+  box-shadow: var(--elev-2);
 }
 
 .headerInner {
@@ -66,6 +67,12 @@
   border-radius: 50%;
   background: white;
   object-fit: cover;
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter);
+}
+.brand:hover .brandLogo {
+  transform: scale(1.06);
+  box-shadow: var(--elev-3);
 }
 
 .brandText {
@@ -95,6 +102,7 @@
 }
 
 .navLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -104,11 +112,41 @@
   font-size: 14px;
   font-weight: 650;
   text-decoration: none;
-  transition: background-color 180ms ease, color 180ms ease;
+  transition: background-color var(--dur-base) var(--ease-enter), color var(--dur-base) var(--ease-enter);
+}
+
+/* Underline that draws out from the left on approach, and stays for the section
+   the visitor is actually in. */
+.navLink::after {
+  content: "";
+  position: absolute;
+  inset: auto 12px 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .navLink:hover {
   background: #f1f5f9;
   color: #0f172a;
+}
+.navLink:hover::after {
+  transform: scaleX(1);
+}
+.navLink svg {
+  transition: transform var(--dur-base) var(--ease-enter);
+}
+.navLink:hover svg {
+  transform: translateY(-1px);
+}
+.navLink[data-active="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.navLink[data-active="true"]::after {
+  transform: scaleX(1);
 }
 
 .auth {
@@ -124,24 +162,32 @@
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
 .ghost:hover {
   background: var(--accent-soft);
+  color: #0b4f4a;
 }
 
 .cta {
   border-radius: 9px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 9px 15px;
   color: white;
   font-size: 14px;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-fast) var(--ease-enter), box-shadow var(--dur-fast) var(--ease-enter), filter var(--dur-fast) var(--ease-enter);
 }
 .cta:hover {
-  background: var(--accent-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.cta:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 
 .main {
@@ -157,7 +203,7 @@
 
 .footer {
   border-top: 1px solid var(--border);
-  background: white;
+  background: linear-gradient(180deg, #ffffff 0%, #f5faf9 100%);
 }
 .footerInner {
   display: flex;
@@ -196,6 +242,7 @@
 }
 
 .tab {
+  position: relative;
   display: flex;
   min-width: 0;
   min-height: 62px;
@@ -207,7 +254,21 @@
   font-size: 10.5px;
   font-weight: 650;
   text-decoration: none;
-  transition: color 180ms ease, background-color 180ms ease;
+  transition: color var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter);
+}
+
+/* Indicator over the active tab. Position and shape carry the state, so colour is
+   never the only signal on a surface where hover does not exist. */
+.tab::before {
+  content: "";
+  position: absolute;
+  inset: 0 26% auto;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .tab span {
   overflow: hidden;
@@ -215,9 +276,21 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.tab svg {
+  transition: transform var(--dur-base) var(--ease-enter);
+}
+.tab:active {
+  background: #f1f5f9;
+}
+.tab:active svg {
+  transform: scale(0.9);
+}
 .tab[data-active="true"] {
   background: #f0fdfa;
   color: var(--accent-strong);
+}
+.tab[data-active="true"]::before {
+  transform: scaleX(1);
 }
 
 /* Keep the fixed bar from covering the footer on a phone. */

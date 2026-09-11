@@ -1,7 +1,29 @@
 /*
  * Visitor home (`/visitor`) styles — CSS Module, co-located with the page.
  * globals.css is frozen, so the tourist surface keeps its own vocabulary here.
+ * Elevation, durations and easing come from the tokens in app/tourist-motion.css.
+ *
+ * Motion budget: the action-card pair carries this page's one entrance reveal.
+ * Everything else moves only when the pointer or finger acts on it.
  */
+
+/* Declared here, not in tourist-motion.css: a CSS Module rewrites animation-name,
+   so a keyframe defined in another file can never be reached from this one. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-from));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .head {
   display: flex;
@@ -44,7 +66,11 @@
   margin-bottom: 18px;
 }
 
+/* The page's entrance reveal: the two action cards settle up, second one 70ms
+   behind, so the pair reads as one gesture rather than a queue of animations. */
 .action {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -54,13 +80,36 @@
   padding: 22px;
   color: inherit;
   text-decoration: none;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  box-shadow: var(--elev-2);
+  animation: rise var(--dur-reveal) var(--ease-enter) both;
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), border-color var(--dur-base) var(--ease-enter);
 }
+.actions .action:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.action::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, #14b8a6 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-slow) var(--ease-enter);
+}
+
 .action:hover {
   border-color: var(--accent);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
+  box-shadow: var(--elev-4);
+  transform: translateY(calc(-1 * var(--lift)));
+}
+.action:hover::before {
+  transform: scaleX(1);
+}
+.action:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-2);
 }
 .action:focus-visible {
   outline: 3px solid #0891b2;
@@ -69,7 +118,9 @@
 
 .action--primary {
   border-color: #99f6e4;
-  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(20, 184, 166, 0.14) 0%, rgba(20, 184, 166, 0) 55%),
+    linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
 }
 
 .action__icon {
@@ -80,10 +131,19 @@
   border-radius: 12px;
   background: var(--cyan-soft);
   color: var(--accent);
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter), color var(--dur-base) var(--ease-enter);
+}
+.action:hover .action__icon {
+  transform: scale(1.07);
 }
 .action--primary .action__icon {
   background: var(--accent);
   color: white;
+  box-shadow: var(--elev-accent);
+}
+.action--primary:hover .action__icon {
+  background: var(--accent-strong);
 }
 
 .action__title {
@@ -99,10 +159,10 @@
 .action__title svg {
   flex: none;
   color: var(--accent);
-  transition: transform 180ms ease;
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .action:hover .action__title svg {
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 .action__desc {
@@ -115,9 +175,9 @@
 .action__tag {
   align-self: start;
   border-radius: 999px;
-  background: #eef2f7;
+  background: var(--accent-soft);
   padding: 4px 11px;
-  color: #475569;
+  color: var(--accent-strong);
   font-size: 11.5px;
   font-weight: 750;
   letter-spacing: 0.04em;
@@ -145,11 +205,18 @@
   font-size: 14.5px;
   font-weight: 700;
   text-decoration: none;
-  transition: border-color 180ms ease, background-color 180ms ease;
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), border-color var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter);
 }
 .secondary__link:hover {
   border-color: var(--accent);
-  background: #f8fafc;
+  background: #f7fcfb;
+  box-shadow: var(--elev-3);
+  transform: translateY(-2px);
+}
+.secondary__link:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 .secondary__link > span {
   display: flex;
@@ -172,6 +239,10 @@
 .secondary__link svg {
   flex: none;
   color: var(--accent);
+  transition: transform var(--dur-base) var(--ease-enter);
+}
+.secondary__link:hover svg:last-child {
+  transform: translateX(3px);
 }
 
 /* ---- Permit strip ---- */
@@ -181,6 +252,7 @@
   border-radius: 18px;
   background: white;
   padding: 22px;
+  box-shadow: var(--elev-2);
 }
 
 .section__head {
@@ -213,6 +285,7 @@
 }
 
 .row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -220,12 +293,30 @@
   border: 1px solid var(--border);
   border-radius: 13px;
   background: #f8fafc;
-  padding: 13px 15px;
-  transition: border-color 180ms ease, background-color 180ms ease;
+  padding: 13px 15px 13px 18px;
+  overflow: hidden;
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), border-color var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter);
+}
+
+/* Status edge that slides in from the left as the row is approached. */
+.row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .row:hover {
   border-color: var(--accent);
   background: #f0fdfa;
+  box-shadow: var(--elev-2);
+  transform: translateX(2px);
+}
+.row:hover::before {
+  transform: scaleY(1);
 }
 
 /* The row carries two links (detail + QR pass), so it cannot be one link itself. */
@@ -273,17 +364,23 @@
   align-items: center;
   gap: 6px;
   border-radius: 8px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 7px 12px;
   color: white;
   font-size: 12.5px;
   font-weight: 750;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-fast) var(--ease-enter), box-shadow var(--dur-fast) var(--ease-enter);
 }
 .row__qr:hover {
-  background: var(--accent-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--elev-accent);
+}
+.row__qr:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 
 /* Actions that belong to a shared EmptyState, which has no slot of its own. */
@@ -300,16 +397,22 @@
 }
 .emptyBtn {
   border-radius: 9px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 10px 16px;
   color: white;
   font-size: 13.5px;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-fast) var(--ease-enter), box-shadow var(--dur-fast) var(--ease-enter);
 }
 .emptyBtn:hover {
-  background: var(--accent-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--elev-accent);
+}
+.emptyBtn:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 .emptyLink {
   border-radius: 9px;
@@ -318,6 +421,7 @@
   font-size: 13.5px;
   font-weight: 750;
   text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-standard);
 }
 .emptyLink:hover {
   background: var(--accent-soft);
@@ -333,11 +437,13 @@
   border: 1px solid #bae6fd;
   border-left-width: 4px;
   border-radius: 12px;
-  background: #f0f9ff;
+  background: linear-gradient(90deg, #f0f9ff 0%, #fbfdff 100%);
   padding: 14px 16px;
   color: #075985;
   font-size: 13.5px;
   line-height: 1.6;
+  box-shadow: var(--elev-1);
+  animation: fade var(--dur-slow) var(--ease-enter) both;
 }
 .notice svg {
   flex: none;
@@ -347,6 +453,7 @@
   color: #075985;
   font-weight: 750;
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* ---- Responsive ---- */

@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
-import { touristNavigation } from "./tourist-nav-items";
-import { TouristMobileNav } from "./tourist-mobile-nav";
+import { TouristHeaderNav, TouristMobileNav } from "./tourist-nav";
+import "../tourist-motion.css";
 import styles from "./tourist-shell.module.css";
 
 /**
@@ -43,14 +43,7 @@ export default async function TouristLayout({ children }: { children: ReactNode 
             </span>
           </Link>
 
-          <nav className={styles.nav} aria-label="Primary">
-            {touristNavigation.map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} className={styles.navLink}>
-                <Icon size={17} aria-hidden="true" />
-                <span>{label}</span>
-              </Link>
-            ))}
-          </nav>
+          <TouristHeaderNav />
 
           <div className={styles.auth}>
             {user ? (

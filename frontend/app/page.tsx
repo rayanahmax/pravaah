@@ -12,12 +12,13 @@ import {
   TicketCheck,
 } from "lucide-react";
 import { getProfile } from "@/lib/auth";
+import "./tourist-motion.css";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
   title: "Regulated visitor access",
   description:
-    "PRAVAAH lets visitors browse regulated destinations, request a entry permit and carry a QR pass, while the department controls capacity, quotas and approvals.",
+    "PRAVAAH lets visitors browse regulated destinations, request an entry permit and carry a QR pass, while the department controls capacity, quotas and approvals.",
 };
 
 /**
@@ -86,39 +87,58 @@ export default async function LandingPage() {
 
       <main id="main" className={styles.main} tabIndex={-1}>
         <section className={styles.hero}>
-          <Image
-            src="/logo.jpeg"
-            width={68}
-            height={68}
-            alt="PRAVAAH emblem"
-            className={styles["logo--hero"]}
-            preload
-          />
-          <p className={styles["hero__eyebrow"]}>
-            <ShieldCheck size={14} aria-hidden="true" /> Department of tourism
-          </p>
-          <h1 className={styles["hero__title"]}>
-            Plan a protected visit, carry a verified permit
-          </h1>
-          <p className={styles["hero__desc"]}>
-            PRAVAAH keeps fragile destinations within their carrying capacity. Visitors see live
-            capacity and access status, request a permit for the day they want to go, and present a
-            QR pass at the checkpoint. The department decides approvals against capacity and the
-            daily quota.
-          </p>
-          <div className={styles["hero__actions"]}>
-            <Link href="/visitor" className={styles.cta}>
-              {visitorCta} <ArrowRight size={17} aria-hidden="true" />
-            </Link>
-            <Link href={operatorHref} className={styles.ctaAlt}>
-              {operatorCta}
-            </Link>
+          <div className={styles.hero__inner}>
+            <Image
+              src="/logo.jpeg"
+              width={68}
+              height={68}
+              alt="PRAVAAH emblem"
+              className={styles["logo--hero"]}
+              preload
+            />
+            <p className={styles["hero__eyebrow"]}>
+              <ShieldCheck size={14} aria-hidden="true" /> Department of tourism
+            </p>
+            <h1 className={styles["hero__title"]}>
+              Plan a protected visit, carry a verified permit
+            </h1>
+            <p className={styles["hero__desc"]}>
+              PRAVAAH keeps fragile destinations within their carrying capacity. Visitors see live
+              capacity and access status, request a permit for the day they want to go, and present a
+              QR pass at the checkpoint. The department decides approvals against capacity and the
+              daily quota.
+            </p>
+            <div className={styles["hero__actions"]}>
+              <Link href="/visitor" className={styles.cta}>
+                {visitorCta} <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <Link href={operatorHref} className={styles.ctaAlt}>
+                {operatorCta}
+              </Link>
+            </div>
+            <p className={styles["hero__note"]}>
+              <Info size={15} aria-hidden="true" />
+              Browsing destinations is open to everyone. Requesting a permit needs an account, and
+              approval is always a department decision.
+            </p>
           </div>
-          <p className={styles["hero__note"]}>
-            <Info size={15} aria-hidden="true" />
-            Browsing destinations is open to everyone. Requesting a permit needs an account, and
-            approval is always a department decision.
-          </p>
+
+          {/* Layered ridges under the hero copy, echoing the emblem's mountains and
+              water. Filled shapes only, so stretching to any width cannot distort a
+              stroke. Decorative, therefore hidden from assistive tech. */}
+          <div className={styles["hero__ridge"]} aria-hidden="true">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" focusable="false">
+              <path
+                d="M0 96 L120 58 220 86 330 40 440 80 560 34 680 78 800 46 920 84 1040 52 1160 88 1200 72 V120 H0 Z"
+                fill="rgba(15,118,110,0.10)"
+              />
+              <path
+                d="M0 110 L140 78 260 102 390 66 520 98 650 70 780 100 910 74 1040 104 1200 84 V120 H0 Z"
+                fill="rgba(15,118,110,0.16)"
+              />
+              <path d="M0 115 H1200 V120 H0 Z" fill="rgba(8,145,178,0.22)" />
+            </svg>
+          </div>
         </section>
 
         <section className={styles.choice} aria-labelledby="choose-heading">

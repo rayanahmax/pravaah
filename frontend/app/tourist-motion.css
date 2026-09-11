@@ -1,0 +1,88 @@
+/*
+ * PRAVAAH — tourist surface motion and elevation tokens.
+ *
+ * WHY THIS IS A PLAIN STYLESHEET AND NOT A CSS MODULE
+ *   Two hard reasons. CSS Modules hash @keyframes names per file, so an animation
+ *   declared in one module cannot be referenced from another — shared keyframes
+ *   have to live in an unlayered file. And custom properties only inherit from an
+ *   ancestor, so a ramp shared by the landing page and the tourist shell cannot
+ *   live inside either of their modules.
+ *
+ * WHY NOT globals.css
+ *   globals.css is frozen so the three tourist workstreams never collide on it
+ *   (see the note in (tourist)/layout.tsx). This file is tourist-only and is
+ *   imported by exactly two entry points: the tourist shell and the landing page.
+ *   The department console never loads it.
+ *
+ * DESIGN BUDGET — from .opencode/skills/ui-ux-pro-max, filtered through
+ * docs/DEVELOPMENT_PLAN.md Phase 18 ("avoid neon gradients, excessive
+ * glassmorphism, and generic AI-dashboard styling"):
+ *   * Motion is reserved for 1-2 key elements per view. Entrance reveals below are
+ *     used once per page, on the primary content group — never on every card.
+ *   * Hover is a material response (lift + shadow), not a decoration. Nothing is
+ *     discoverable only by hovering, so touch devices lose nothing.
+ *   * Easing is asymmetric: ease-out entering, ease-in leaving. Linear reads as
+ *     robotic.
+ *   * Depth is a 4-step shadow ramp on the existing teal palette. No frosted
+ *     glass panels and no mesh gradients.
+ */
+
+:root {
+  /* Elevation ramp. Tinted toward the slate foreground rather than pure black so
+     shadows stay cool on the light teal ground instead of going muddy. */
+  --elev-1: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --elev-2: 0 2px 6px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.05);
+  --elev-3: 0 10px 24px rgba(15, 23, 42, 0.09), 0 3px 8px rgba(15, 23, 42, 0.05);
+  --elev-4: 0 20px 44px rgba(15, 23, 42, 0.13), 0 6px 14px rgba(15, 23, 42, 0.06);
+
+  /* A teal-tinted shadow for elements that are themselves accent-coloured, so a
+     raised button does not cast a grey blur. */
+  --elev-accent: 0 8px 20px rgba(15, 118, 110, 0.28);
+
+  /* Durations. Snappy enough to feel responsive, long enough to read as motion. */
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 360ms;
+  --dur-reveal: 520ms;
+
+  /* Asymmetric easing: enter with a slight overshoot-free settle, leave cleanly. */
+  --ease-enter: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 0.9, 0.35);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Distance used by the entrance and lift animations. Small on purpose — a 14px
+     travel reads as professional, a 40px one reads as a template. */
+  --lift: 3px;
+  --rise-from: 12px;
+}
+
+/* ---------------------------------------------------------------------------
+   Why there are no @keyframes in this file
+   Measured at runtime: a CSS Module rewrites every animation-name it contains,
+   so `animation: prv-rise …` inside landing.module.css became
+   `landing-module__<hash>__prv-rise`. A keyframe declared here is unscoped, so
+   the two never meet and the animation silently does nothing — it fails safe
+   (the element simply renders in its final state), which is exactly why it is
+   easy to ship by accident.
+
+   Custom properties have no such problem: they are inherited from :root and
+   resolve at use time, so the tokens below are shared freely. Keyframes are not.
+   Any new animation therefore declares its @keyframes inside the same module
+   that references it, and the module's own scoping keeps names from colliding.
+   --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   Reduced motion
+   globals.css already clamps animation-duration and transition-duration to
+   .01ms, but it does NOT clamp the delays — so a 320ms staggered reveal would
+   still leave content invisible for a third of a second and then snap it in.
+   Zeroing the delays here finishes that guarantee.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-delay: 0s !important;
+    transition-delay: 0s !important;
+  }
+}

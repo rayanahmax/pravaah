@@ -1,7 +1,12 @@
 /*
  * Public landing page (root `/`) styles — a CSS Module, per the rule that
  * globals.css stays frozen so parallel workstreams never collide on it. Reuses
- * the app's light teal tokens; no new colour vocabulary.
+ * the app's light teal tokens; motion and elevation come from the tokens and
+ * keyframes declared in app/tourist-motion.css.
+ *
+ * Motion budget (ui-ux-pro-max, DEVELOPMENT_PLAN Phase 18): the hero carries the
+ * one entrance reveal on this page. The role cards move only in response to the
+ * pointer, so the page feels alive without animating everything on it.
  */
 
 .page {
@@ -10,6 +15,25 @@
   flex-direction: column;
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Two very soft accent washes anchored to the corners, over the existing light
+   ground. Deliberately not a mesh gradient: one wash per corner at 7-9% reads as
+   depth, four saturated blooms read as a template. */
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 88% -8%, rgba(15, 118, 110, 0.09) 0%, rgba(15, 118, 110, 0) 62%),
+    radial-gradient(60% 50% at -8% 12%, rgba(8, 145, 178, 0.07) 0%, rgba(8, 145, 178, 0) 60%);
+}
+
+.page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .skip {
@@ -23,7 +47,8 @@
   padding: 10px 14px;
   color: white;
   font-weight: 700;
-  transition: transform 180ms ease;
+  text-decoration: none;
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .skip:focus {
   transform: translateY(0);
@@ -32,8 +57,13 @@
 /* ---- Top bar ---- */
 
 .bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(1.5) blur(10px);
+  box-shadow: var(--elev-1);
 }
 
 .barInner {
@@ -65,12 +95,19 @@
   border-radius: 50%;
   background: white;
   object-fit: cover;
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter);
+}
+.brand:hover .logo {
+  transform: scale(1.06);
+  box-shadow: var(--elev-3);
 }
 
 .logo--hero {
   width: 68px;
   height: 68px;
   border-radius: 50%;
+  box-shadow: var(--elev-3), 0 0 0 6px rgba(15, 118, 110, 0.07);
 }
 
 .brandText {
@@ -103,24 +140,32 @@
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
 .ghost:hover {
   background: var(--accent-soft);
+  color: #0b4f4a;
 }
 
 .barCta {
   border-radius: 9px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 9px 15px;
   color: white;
   font-size: 14px;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-fast) var(--ease-enter), box-shadow var(--dur-fast) var(--ease-enter), filter var(--dur-fast) var(--ease-enter);
 }
 .barCta:hover {
-  background: var(--accent-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.barCta:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 
 /* ---- Body frame ---- */
@@ -136,13 +181,62 @@
 /* ---- Hero ---- */
 
 .hero {
-  display: grid;
-  gap: 20px;
-  padding: 32px 26px;
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff 0%, #f2f9f7 100%);
+  background:
+    radial-gradient(115% 130% at 100% 0%, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0) 58%),
+    linear-gradient(180deg, #ffffff 0%, #f1f9f7 100%);
+  box-shadow: var(--elev-2);
 }
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 20px;
+  padding: 32px 26px 104px;
+}
+
+/* The ridge line, echoing the emblem's mountains and river. Purely decorative,
+   so it is aria-hidden in the markup and inert here. */
+.hero__ridge {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 0;
+  height: 112px;
+  pointer-events: none;
+}
+.hero__ridge svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Declared here, not in tourist-motion.css: a CSS Module rewrites animation-name,
+   so a keyframe defined in another file can never be reached from this one. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-from));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The page's single entrance reveal: the hero settles up, children staggered by
+   55ms. Nothing else on the page enters with motion. */
+.hero__inner > * {
+  animation: rise var(--dur-reveal) var(--ease-enter) both;
+}
+.hero__inner > *:nth-child(2) { animation-delay: 55ms; }
+.hero__inner > *:nth-child(3) { animation-delay: 110ms; }
+.hero__inner > *:nth-child(4) { animation-delay: 165ms; }
+.hero__inner > *:nth-child(5) { animation-delay: 220ms; }
+.hero__inner > *:nth-child(6) { animation-delay: 275ms; }
 
 .hero__eyebrow {
   display: inline-flex;
@@ -152,7 +246,7 @@
   justify-self: start;
   border: 1px solid #bbf7d0;
   border-radius: 999px;
-  background: #f0fdf4;
+  background: rgba(240, 253, 244, 0.92);
   padding: 6px 12px;
   color: #166534;
   font-size: 12px;
@@ -191,16 +285,29 @@
   align-items: center;
   gap: 9px;
   border-radius: 11px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 0 22px;
   color: white;
   font-size: 15.5px;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), filter var(--dur-base) var(--ease-enter);
+}
+.cta svg {
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .cta:hover {
-  background: var(--accent-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.cta:hover svg {
+  transform: translateX(3px);
+}
+.cta:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 
 .ctaAlt {
@@ -216,10 +323,17 @@
   font-size: 15px;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter);
 }
 .ctaAlt:hover {
+  transform: translateY(-2px);
   background: var(--accent-soft);
+  box-shadow: var(--elev-3);
+}
+.ctaAlt:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 
 .hero__note {
@@ -264,6 +378,8 @@
 }
 
 .card {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -271,13 +387,33 @@
   border-radius: 18px;
   background: var(--surface);
   padding: 24px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), border-color var(--dur-base) var(--ease-enter);
 }
+
+/* Accent rule that draws across the top of the card as the pointer arrives. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, #14b8a6 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-slow) var(--ease-enter);
+}
+
 .card:hover {
+  transform: translateY(calc(-1 * var(--lift)));
   border-color: var(--accent);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
+  box-shadow: var(--elev-4);
+}
+.card:hover::before {
+  transform: scaleX(1);
+}
+.card:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-2);
 }
 
 .card__icon {
@@ -288,10 +424,25 @@
   border-radius: 13px;
   background: var(--cyan-soft);
   color: var(--accent);
+  box-shadow: var(--elev-1);
+  transition: transform var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter), color var(--dur-base) var(--ease-enter);
 }
+.card:hover .card__icon {
+  transform: scale(1.07);
+  background: var(--accent);
+  color: white;
+}
+
 .card--staff .card__icon {
   background: #eef2f7;
   color: #0f172a;
+}
+.card--staff:hover .card__icon {
+  background: #0f172a;
+  color: white;
+}
+.card--staff::before {
+  background: linear-gradient(90deg, #0f172a 0%, #334155 100%);
 }
 
 .card__eyebrow {
@@ -334,12 +485,19 @@
   color: #334155;
   font-size: 14px;
   line-height: 1.5;
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .card__list svg {
   flex: none;
   margin-top: 3px;
   color: var(--accent);
 }
+/* Items nudge in as the card lifts, so the list reads as one surface responding. */
+.card:hover .card__list li {
+  transform: translateX(2px);
+}
+.card:hover .card__list li:nth-child(2) { transition-delay: 40ms; }
+.card:hover .card__list li:nth-child(3) { transition-delay: 80ms; }
 
 .card__go {
   display: inline-flex;
@@ -350,22 +508,34 @@
   align-self: start;
   margin-top: auto;
   border-radius: 10px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 0 19px;
   color: white;
   font-size: 14.5px;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter);
+}
+.card__go svg {
+  transition: transform var(--dur-base) var(--ease-enter);
 }
 .card__go:hover {
-  background: var(--accent-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--elev-accent);
+}
+.card__go:hover svg {
+  transform: translateX(3px);
+}
+.card__go:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
 }
 .card--staff .card__go {
-  background: #0f172a;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
 }
 .card--staff .card__go:hover {
-  background: #1e293b;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
 }
 
 .card__foot {
@@ -378,9 +548,11 @@
   color: var(--accent-strong);
   font-weight: 700;
   text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--dur-fast) var(--ease-standard);
 }
 .card__foot a:hover {
-  text-decoration: underline;
+  border-bottom-color: var(--accent);
 }
 
 /* ---- How it works ---- */
@@ -391,34 +563,61 @@
   border-radius: 18px;
   background: white;
   padding: 24px;
+  box-shadow: var(--elev-2);
 }
 
 .steps__list {
+  position: relative;
   display: grid;
   gap: 18px;
   margin: 20px 0 0;
   padding: 0;
   list-style: none;
-  counter-reset: step;
+}
+
+/* Connector drawn behind the numbered badges once the row is horizontal. */
+@media (min-width: 1024px) {
+  .steps__list::before {
+    content: "";
+    position: absolute;
+    top: 22px;
+    right: 12%;
+    left: 12%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(15, 118, 110, 0.12) 0%, rgba(15, 118, 110, 0.45) 50%, rgba(15, 118, 110, 0.12) 100%);
+  }
 }
 
 .steps__list li {
+  position: relative;
   display: flex;
   gap: 13px;
   align-items: flex-start;
+  border-radius: 12px;
+  padding: 6px;
+  margin: -6px;
+  transition: background-color var(--dur-base) var(--ease-standard);
+}
+.steps__list li:hover {
+  background: #f4faf8;
 }
 
 .steps__num {
   display: grid;
+  place-items: center;
   width: 32px;
   height: 32px;
   flex: none;
-  place-items: center;
   border-radius: 50%;
-  background: #134e4a;
+  background: linear-gradient(180deg, #115e59 0%, #134e4a 100%);
   color: white;
   font-size: 13px;
   font-weight: 800;
+  box-shadow: var(--elev-2), 0 0 0 4px white;
+  transition: transform var(--dur-base) var(--ease-enter);
+}
+.steps__list li:hover .steps__num {
+  transform: scale(1.08);
 }
 
 .steps__body {
@@ -441,7 +640,7 @@
 
 .footer {
   border-top: 1px solid var(--border);
-  background: white;
+  background: linear-gradient(180deg, #ffffff 0%, #f5faf9 100%);
 }
 .footerInner {
   display: flex;
@@ -463,8 +662,8 @@
 /* ---- Responsive ---- */
 
 @media (min-width: 700px) {
-  .hero {
-    padding: 40px 38px;
+  .hero__inner {
+    padding: 40px 38px 120px;
   }
   .choice {
     grid-template-columns: repeat(2, minmax(0, 1fr));
