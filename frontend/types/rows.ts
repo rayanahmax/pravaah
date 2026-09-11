@@ -82,6 +82,7 @@ export type PermitRow = {
   status: PermitStatus;
   contact_information: unknown;
   emergency_contact: unknown;
+  permit_details: unknown;
   created_at: string;
   updated_at: string;
 };

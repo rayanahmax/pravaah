@@ -23,7 +23,7 @@ import type { PermitRow, PermitQrRow } from "@/types/rows";
  */
 
 const PERMIT_COLUMNS =
-  "id, user_id, destination_id, visit_date, group_size, status, contact_information, emergency_contact, created_at, updated_at";
+  "id, user_id, destination_id, visit_date, group_size, status, contact_information, emergency_contact, permit_details, created_at, updated_at";
 
 /** The shape the database functions return: no token material, no contact PII. */
 export type PermitSummary = {
@@ -73,6 +73,7 @@ export async function createPermit(input: {
   groupSize: number;
   contactInformation?: Record<string, unknown> | null;
   emergencyContact?: Record<string, unknown> | null;
+  permitDetails?: Record<string, unknown> | null;
 }): Promise<PermitWriteResult> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("request_permit", {
@@ -81,6 +82,7 @@ export async function createPermit(input: {
     p_group_size: input.groupSize,
     p_contact_information: input.contactInformation ?? null,
     p_emergency_contact: input.emergencyContact ?? null,
+    p_permit_details: input.permitDetails ?? null,
   });
 
   if (error) throw new Error(`createPermit: ${error.message}`);

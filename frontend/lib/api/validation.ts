@@ -248,6 +248,7 @@ export type NewPermit = {
   groupSize: number;
   contactInformation?: Record<string, unknown> | null;
   emergencyContact?: Record<string, unknown> | null;
+  permitDetails?: Record<string, unknown> | null;
 };
 
 /**
@@ -274,7 +275,7 @@ export function parsePermitCreate(body: unknown): ParseResult<NewPermit> {
   if (!input) return fail("body", "must be a JSON object");
 
   const errors: FieldError[] = [];
-  const known = ["destination_id", "visit_date", "group_size", "contact_information", "emergency_contact"];
+  const known = ["destination_id", "visit_date", "group_size", "contact_information", "emergency_contact", "permit_details"];
   const unknown = Object.keys(input).filter((key) => !known.includes(key));
   if (unknown.length) errors.push({ field: unknown[0], message: "unknown field" });
 
@@ -291,6 +292,7 @@ export function parsePermitCreate(body: unknown): ParseResult<NewPermit> {
 
   const contact = optionalJsonObject(input, "contact_information", errors);
   const emergency = optionalJsonObject(input, "emergency_contact", errors);
+  const details = optionalJsonObject(input, "permit_details", errors);
 
   if (errors.length) return { ok: false, errors };
 
@@ -302,6 +304,7 @@ export function parsePermitCreate(body: unknown): ParseResult<NewPermit> {
       groupSize: (groupSize as { ok: true; value: number }).value,
       contactInformation: contact,
       emergencyContact: emergency,
+      permitDetails: details,
     },
   };
 }

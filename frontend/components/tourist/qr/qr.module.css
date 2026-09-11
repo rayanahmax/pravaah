@@ -1,0 +1,62 @@
+/* Tourist QR pass screen. */
+
+.wrap {
+  display: grid;
+  gap: 20px;
+  justify-items: center;
+  max-width: 460px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.head { display: grid; gap: 6px; }
+.eyebrow { margin: 0; color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.title { margin: 0; color: #0f172a; font-size: 22px; letter-spacing: -0.02em; }
+.subtitle { margin: 0; color: var(--muted); font-size: 14px; }
+
+.card {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  padding: 26px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.qr {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid var(--border);
+}
+
+.meta { display: grid; gap: 8px; width: 100%; }
+.meta__row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; }
+.meta__row dt { color: var(--muted); }
+.meta__row dd { margin: 0; color: #0f172a; font-weight: 700; }
+
+.hint { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; max-width: 40ch; }
+
+.back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; font-weight: 650; text-decoration: none; }
+.back:hover { color: #0f172a; text-decoration: underline; }
+
+.notice {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  max-width: 460px;
+  margin: 40px auto;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: white;
+  text-align: center;
+  color: var(--muted);
+}
+.notice h2 { margin: 0; color: #0f172a; font-size: 18px; }
+.notice p { margin: 0; font-size: 14px; line-height: 1.6; }

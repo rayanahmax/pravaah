@@ -1,0 +1,43 @@
+name: CI
+
+# Runs the repo's own quality gates on every pull request and on main, so the
+# three Phase 13 owners integrate against the same bar a reviewer sees:
+#   typecheck -> lint -> unit tests -> production build.
+# The build runs here (in a clean checkout with no `next dev` sharing `.next`),
+# which is exactly where it is safe — never run `next build` while the dev server
+# is serving in the same working tree.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
