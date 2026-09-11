@@ -83,3 +83,22 @@ export type PermitRow = {
   created_at: string;
   updated_at: string;
 };
+
+/**
+ * Projection for GET /permits/{id}/qr (Phase 7).
+ *
+ * Deliberately separate from PermitRow: the QR surface is the only read that
+ * legitimately touches qr_token_hash, and PermitRow is projected everywhere
+ * the token must not appear. Naming the two types differently stops a future
+ * "just widen PERMIT_COLUMNS" edit from leaking the token through the
+ * status reads.
+ */
+export type PermitQrRow = {
+  id: string;
+  user_id: string;
+  destination_id: string;
+  visit_date: string;
+  group_size: number;
+  status: PermitStatus;
+  qr_token_hash: string | null;
+};

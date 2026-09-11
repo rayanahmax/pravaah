@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { PermitStatus } from "@/lib/permit-rules";
-import type { PermitRow } from "@/types/rows";
+import type { PermitRow, PermitQrRow } from "@/types/rows";
 
 /**
  * Permit reads and writes.
@@ -142,6 +142,34 @@ export async function getPermit(permitId: string): Promise<PermitRow | null> {
     .maybeSingle<PermitRow>();
 
   if (error) throw new Error(`getPermit: ${error.message}`);
+  return data ?? null;
+}
+
+/**
+ * Owner-scoped QR read (Phase 7).
+ *
+ * Not filtered by user_id at the query layer: RLS already refuses to surface a
+ * permit the caller has no SELECT policy for, so if a row comes back, the
+ * caller could read it. The route that uses this additionally compares
+ * `user_id` to the caller before returning the token, because an operator's
+ * SELECT policy would otherwise let them fetch a tourist's QR — a token is
+ * something to *scan*, not to *read*.
+ *
+ * qr_token_hash is only ever projected here. It is missing from PERMIT_COLUMNS
+ * and from permit_summary() in migration 008 so the ordinary status reads
+ * cannot return it.
+ */
+export async function getPermitQr(permitId: string): Promise<PermitQrRow | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("permits")
+    .select(
+      "id, user_id, destination_id, visit_date, group_size, status, qr_token_hash"
+    )
+    .eq("id", permitId)
+    .maybeSingle<PermitQrRow>();
+
+  if (error) throw new Error(`getPermitQr: ${error.message}`);
   return data ?? null;
 }
 
