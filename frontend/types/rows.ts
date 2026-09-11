@@ -50,6 +50,8 @@ export type CheckInRow = {
   permit_id: string;
   destination_id: string;
   group_size: number;
+  operator_id?: string;
+  checked_in_at?: string;
 };
 
 export type CheckOutRow = {

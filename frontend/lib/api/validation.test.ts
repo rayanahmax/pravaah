@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 
 import {
   parseCapacityUpdate,
+  parseCheckIn,
   parseDestinationCreate,
   parseDestinationPatch,
   parseIsoDate,
@@ -81,4 +82,15 @@ test("quota update needs both a real date and an integer", () => {
   assert.equal(parseQuotaUpdate({ quota: 500 }).ok, false);
   assert.equal(parseQuotaUpdate({ date: "2026-09-10" }).ok, false);
   assert.equal(parseQuotaUpdate({ date: "2026-09-10", quota: 50.5 }).ok, false);
+});
+
+test("checkin parse accepts qr_token and rejects bad shapes or extra fields", () => {
+  assert.deepEqual(parseCheckIn({ qr_token: "abc-123-xyz" }), {
+    ok: true,
+    value: { qr_token: "abc-123-xyz" },
+  });
+  assert.equal(parseCheckIn({}).ok, false);
+  assert.equal(parseCheckIn({ qr_token: "   " }).ok, false);
+  assert.equal(parseCheckIn({ qr_token: 12345 }).ok, false);
+  assert.equal(parseCheckIn({ qr_token: "abc", extra: "field" }).ok, false);
 });
