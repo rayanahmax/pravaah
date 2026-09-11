@@ -2,9 +2,20 @@
  * Hand-written request validation. API rule 1 is "validate all requests"; this is
  * the only place request bodies become trusted values.
  *
- * Deliberately dependency-free: the plan approves no schema library, and these
- * rules are short enough to read and test directly.
+ * Deliberately free of any external schema library: the plan approves none, and
+ * these rules are short enough to read and test directly. That is a constraint on
+ * dependencies, not on internal reuse — enums and rules that already have an owner
+ * are imported rather than restated, because a second copy of ALERT_SEVERITIES is
+ * exactly how a validator starts accepting a value the database rejects.
  */
+
+/*
+ * Relative, extension-bearing specifiers: the `@/` alias exists only in
+ * tsconfig, so node --test cannot resolve it, and an extensionless relative
+ * import fails Node's literal ESM resolution. The severity list and the window
+ * rule are owned by lib/alert-rules.ts.
+ */
+import { ALERT_SEVERITIES, isWindowValid, type AlertSeverity } from "../alert-rules.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -392,6 +403,133 @@ export function parseCheckOut(body: unknown): ParseResult<{ qr_token: string }> 
   }
 
   return { ok: true, value: { qr_token: input.qr_token.trim() } };
+}
+
+/**
+ * A full ISO 8601 instant with an explicit zone.
+ *
+ * The zone is required rather than inferred. A bare `2026-09-11T18:00` is
+ * ambiguous, and `Date.parse` resolves it against the *server's* zone — so an
+ * operator in IST raising an alert for "6pm" would store 18:00 UTC and the notice
+ * would appear six hours early. The client sends `toISOString()`, which always
+ * carries the Z, and anything looser is refused here rather than guessed.
+ */
+const ISO_TIMESTAMP_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
+
+export function parseIsoTimestamp(
+  value: unknown,
+  field = "timestamp"
+): ParseResult<string> {
+  if (typeof value !== "string" || !ISO_TIMESTAMP_RE.test(value)) {
+    return fail(field, "must be a full ISO 8601 datetime with an explicit zone");
+  }
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return fail(field, "must be a real date and time");
+  return { ok: true, value: new Date(parsed).toISOString() };
+}
+
+function optionalTimestamp(
+  input: Record<string, unknown>,
+  field: string,
+  errors: FieldError[]
+): string | null | undefined {
+  const value = input[field];
+  if (value === undefined || value === null) return value as null | undefined;
+  const parsed = parseIsoTimestamp(value, field);
+  if (!parsed.ok) {
+    errors.push(...parsed.errors);
+    return undefined;
+  }
+  return parsed.value;
+}
+
+/** Fields an operator may set when creating an alert. */
+export type NewAlert = {
+  title: string;
+  message: string;
+  severity: AlertSeverity;
+  starts_at: string | null;
+  ends_at: string | null;
+};
+
+/** Body of POST /api/v1/department/destinations/{id}/alerts. */
+export function parseAlertCreate(body: unknown): ParseResult<NewAlert> {
+  const input = asRecord(body);
+  if (!input) return fail("body", "must be a JSON object");
+
+  const allowed = ["title", "message", "severity", "starts_at", "ends_at"];
+  const unknown = Object.keys(input).filter((k) => !allowed.includes(k));
+  if (unknown.length) return fail(unknown[0], "unknown field");
+
+  const errors: FieldError[] = [];
+  const title = optionalText(input, "title", 120, errors);
+  const message = optionalText(input, "message", 2000, errors);
+
+  const severity = input.severity;
+  const validSeverity =
+    typeof severity === "string" &&
+    (ALERT_SEVERITIES as readonly string[]).includes(severity)
+      ? (severity as AlertSeverity)
+      : undefined;
+  if (!validSeverity) {
+    errors.push({
+      field: "severity",
+      message: `must be one of: ${ALERT_SEVERITIES.join(", ")}`,
+    });
+  }
+
+  // Both bounds are optional: an alert raised "until further notice" has neither.
+  const startsAt = optionalTimestamp(input, "starts_at", errors);
+  const endsAt = optionalTimestamp(input, "ends_at", errors);
+
+  if (errors.length) return { ok: false, errors };
+
+  if (title === null || title === undefined || title === "") {
+    return fail("title", "is required");
+  }
+  if (message === null || message === undefined || message === "") {
+    return fail("message", "is required");
+  }
+  if (!validSeverity) return { ok: false, errors };
+
+  // Same rule as alerts_window_check in migration 016. Enforced here first so a
+  // mistyped window is a readable 400 rather than a constraint violation that the
+  // route would have to report as a 500 (API rule 3).
+  if (!isWindowValid(startsAt ?? null, endsAt ?? null)) {
+    return fail("ends_at", "must be after starts_at");
+  }
+
+  return {
+    ok: true,
+    value: {
+      title,
+      message,
+      severity: validSeverity,
+      starts_at: startsAt ?? null,
+      ends_at: endsAt ?? null,
+    },
+  };
+}
+
+/**
+ * Body of PATCH /api/v1/department/alerts/{alert_id} — the active flag and nothing
+ * else. PRD §16 gives operators create, activate and deactivate; there is no
+ * deliberate edit path, so a published notice cannot be rewritten out from under
+ * someone who already read it. Correcting one means deactivating it and raising a
+ * new alert, which leaves the visible event the change deserves.
+ */
+export function parseAlertPatch(body: unknown): ParseResult<{ active: boolean }> {
+  const input = asRecord(body);
+  if (!input) return fail("body", "must be a JSON object");
+
+  const unknown = Object.keys(input).filter((k) => k !== "active");
+  if (unknown.length) return fail(unknown[0], "unknown field");
+
+  if (typeof input.active !== "boolean") {
+    return fail("active", "must be true or false");
+  }
+  return { ok: true, value: { active: input.active } };
 }
 
 /** Returns null when the body is absent or is not valid JSON. */

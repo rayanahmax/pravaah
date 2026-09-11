@@ -7,11 +7,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  parseAlertCreate,
+  parseAlertPatch,
   parseCapacityUpdate,
   parseCheckIn,
   parseDestinationCreate,
   parseDestinationPatch,
   parseIsoDate,
+  parseIsoTimestamp,
   parseQuotaUpdate,
   parseUuid,
 } from "./validation.ts";
@@ -106,4 +109,108 @@ test("checkin parse accepts qr_token and rejects bad shapes or extra fields", ()
   assert.equal(parseCheckIn({ qr_token: "   " }).ok, false);
   assert.equal(parseCheckIn({ qr_token: 12345 }).ok, false);
   assert.equal(parseCheckIn({ qr_token: "abc", extra: "field" }).ok, false);
+});
+
+test("a timestamp must carry an explicit zone", () => {
+  assert.equal(parseIsoTimestamp("2026-09-11T18:00").ok, false);
+  assert.equal(parseIsoTimestamp("2026-09-11").ok, false);
+  assert.equal(parseIsoTimestamp("not-a-date").ok, false);
+  assert.equal(parseIsoTimestamp(1757594400000).ok, false);
+
+  // Normalised to UTC so what the database stores is unambiguous.
+  assert.deepEqual(parseIsoTimestamp("2026-09-11T18:00+05:30"), {
+    ok: true,
+    value: "2026-09-11T12:30:00.000Z",
+  });
+  assert.equal(parseIsoTimestamp("2026-09-11T12:30:00Z").ok, true);
+});
+
+test("alert create accepts a full or open-ended window", () => {
+  const open = parseAlertCreate({
+    title: "Festival crowding expected",
+    message: "Narrow entry lane is busy between 10:00 and 16:00.",
+    severity: "CAUTION",
+  });
+  assert.equal(open.ok, true);
+  assert.deepEqual((open as { value: unknown }).value, {
+    title: "Festival crowding expected",
+    message: "Narrow entry lane is busy between 10:00 and 16:00.",
+    severity: "CAUTION",
+    starts_at: null,
+    ends_at: null,
+  });
+
+  const bounded = parseAlertCreate({
+    title: "Trail maintenance",
+    message: "Rope bridge out of service.",
+    severity: "WARNING",
+    starts_at: "2026-09-12T04:00:00.000Z",
+    ends_at: "2026-09-14T10:00:00.000Z",
+  });
+  assert.equal(bounded.ok, true);
+});
+
+test("alert create refuses an inverted or zero-length window", () => {
+  // Same rule as alerts_window_check in migration 016; enforced here first so the
+  // operator gets a readable 400 rather than a constraint violation.
+  assert.equal(
+    parseAlertCreate({
+      title: "x",
+      message: "y",
+      severity: "INFO",
+      starts_at: "2026-09-12T00:00:00Z",
+      ends_at: "2026-09-11T00:00:00Z",
+    }).ok,
+    false
+  );
+  assert.equal(
+    parseAlertCreate({
+      title: "x",
+      message: "y",
+      severity: "INFO",
+      starts_at: "2026-09-12T00:00:00Z",
+      ends_at: "2026-09-12T00:00:00Z",
+    }).ok,
+    false
+  );
+});
+
+test("alert create requires title, message and a known severity", () => {
+  assert.equal(parseAlertCreate({ message: "y", severity: "INFO" }).ok, false);
+  assert.equal(parseAlertCreate({ title: "x", severity: "INFO" }).ok, false);
+  assert.equal(parseAlertCreate({ title: "x", message: "y", severity: "URGENT" }).ok, false);
+  assert.equal(parseAlertCreate({ title: "x", message: "y" }).ok, false);
+  assert.equal(parseAlertCreate(null).ok, false);
+});
+
+test("alert create cannot be used to set active or authorship", () => {
+  // `active` is not a create field: a new notice is live, and accepting the flag
+  // would let a caller publish a row that starts switched off. created_by comes
+  // from the authenticated profile, never the body.
+  assert.equal(
+    parseAlertCreate({ title: "x", message: "y", severity: "INFO", active: false }).ok,
+    false
+  );
+  assert.equal(
+    parseAlertCreate({
+      title: "x",
+      message: "y",
+      severity: "INFO",
+      created_by: "caa3533d-8c4a-4d49-b668-d71849bde560",
+    }).ok,
+    false
+  );
+});
+
+test("alert patch accepts only the active flag", () => {
+  assert.deepEqual(parseAlertPatch({ active: false }), { ok: true, value: { active: false } });
+  assert.deepEqual(parseAlertPatch({ active: true }), { ok: true, value: { active: true } });
+  assert.equal(parseAlertPatch({ active: "false" }).ok, false);
+  assert.equal(parseAlertPatch({}).ok, false);
+  assert.equal(parseAlertPatch(null).ok, false);
+
+  // PRD §16 has no edit path: a published notice cannot be rewritten in place.
+  assert.equal(parseAlertPatch({ active: true, title: "hijack" }).ok, false);
+  assert.equal(parseAlertPatch({ title: "hijack" }).ok, false);
+  assert.equal(parseAlertPatch({ severity: "CRITICAL" }).ok, false);
 });

@@ -132,8 +132,19 @@ Return occupancy, capacity, quota, pending permits, recent events, alerts, and a
 
 ## Alerts
 ### GET /api/v1/destinations/{destination_id}/alerts
+Public. Returns only notices currently displaying — deactivated, scheduled and expired rows are filtered out by the same window rule the destination page uses, so this endpoint and the tourist UI cannot disagree. `created_by` is omitted: it is an operator user id and unnecessary PII for a visitor (rule 4).
+
 ### POST /api/v1/department/destinations/{destination_id}/alerts
+Operator only. Body: `{ title, message, severity, starts_at?, ends_at? }`.
+
+`severity` is `INFO | CAUTION | WARNING | CRITICAL` (PRD §16). Timestamps must be full ISO 8601 instants with an explicit zone. `active` and `created_by` are not accepted — a new notice is live, and authorship comes from the authenticated profile. A window that ends at or before it starts is refused with `VALIDATION_ERROR`, mirroring `alerts_window_check` in the database.
+
 ### PATCH /api/v1/department/alerts/{alert_id}
+Operator only. Body: `{ active: true | false }` and nothing else.
+
+There is deliberately no edit path. PRD §16 gives operators create, activate and deactivate; a safety notice already on a visitor's screen must not be rewritable in place, so correcting one means deactivating it and raising a new alert. Any other field is rejected as an unknown field.
+
+Alerts are informational. They never change access status, capacity or quota.
 
 ## Readiness
 ### POST /api/v1/readiness/assess

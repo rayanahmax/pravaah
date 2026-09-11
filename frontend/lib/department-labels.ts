@@ -9,6 +9,16 @@
 
 import type { CapacityStatus } from "@/lib/capacity";
 import type { PermitStatus } from "@/lib/permit-rules";
+/*
+ * The severity list is owned by lib/alert-rules.ts, the domain module. It is
+ * re-exported here so display code keeps one import path. The .ts extension is
+ * required: node --test resolves ES module specifiers literally and will not
+ * follow an extensionless relative import.
+ */
+import { ALERT_SEVERITIES, type AlertSeverity } from "./alert-rules.ts";
+
+export { ALERT_SEVERITIES };
+export type { AlertSeverity };
 
 export type BadgeTone =
   | "default"
@@ -25,10 +35,7 @@ export type BadgeTone =
   | "warning"
   | "critical";
 
-/** Alert severities in escalating order (PRD §16; widened by migration 015). */
-export const ALERT_SEVERITIES = ["INFO", "CAUTION", "WARNING", "CRITICAL"] as const;
-export type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
-
+/** Presentation tone for each severity. One distinct tone per level. */
 const SEVERITY_TONE: Record<AlertSeverity, BadgeTone> = {
   INFO: "pending",
   CAUTION: "caution",
