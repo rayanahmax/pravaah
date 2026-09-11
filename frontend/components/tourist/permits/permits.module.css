@@ -5,8 +5,12 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
   flex-wrap: wrap;
+  /* Same centred measure as .detail, so the list page stops stretching its rows
+     across the full 1120px shell. */
+  width: min(100%, 880px);
+  margin-inline: auto;
+  margin-bottom: 24px;
 }
 .head__eyebrow { margin: 0 0 6px; color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .head__title { margin: 0; color: #0f172a; font-size: clamp(1.6rem, 4vw, 2.1rem); letter-spacing: -0.03em; }
@@ -14,22 +18,48 @@
 
 .newBtn {
   display: inline-flex; align-items: center; gap: 8px;
-  border-radius: 10px; background: var(--accent); padding: 12px 18px;
+  border-radius: 10px; background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%); padding: 12px 18px;
   color: white; font-weight: 750; font-size: 14px; text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), filter var(--dur-base) var(--ease-enter);
 }
-.newBtn:hover { background: var(--accent-strong); }
+.newBtn svg { transition: transform var(--dur-base) var(--ease-enter); }
+.newBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.newBtn:hover svg { transform: rotate(90deg); }
+.newBtn:active { transform: translateY(0); box-shadow: var(--elev-1); }
 
-.list { display: grid; gap: 14px; }
+.list {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 880px);
+  margin-inline: auto;
+}
 
 .row {
+  position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   border: 1px solid var(--border); border-radius: 14px; background: var(--surface);
-  padding: 16px 18px; text-decoration: none; color: inherit; cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  padding: 16px 18px 16px 21px; text-decoration: none; color: inherit; cursor: pointer;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), border-color var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter);
 }
-.row:hover { border-color: var(--accent); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07); }
+/* Status edge growing from the top-left as the row is approached. */
+.row::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
+  background: linear-gradient(180deg, var(--accent) 0%, #14b8a6 100%);
+  transform: scaleY(0); transform-origin: top;
+  transition: transform var(--dur-base) var(--ease-enter);
+}
+.row:hover {
+  border-color: var(--accent); background: #f9fdfc;
+  box-shadow: var(--elev-4); transform: translateX(3px);
+}
+.row:hover::before { transform: scaleY(1); }
+.row:active { transform: translateX(0); box-shadow: var(--elev-2); }
 .row:focus-visible { outline: 3px solid #0891b2; outline-offset: 3px; }
 .row__main { display: grid; gap: 3px; min-width: 0; }
 .row__dest { font-size: 16px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -38,9 +68,11 @@
 .row__ref { color: #94a3b8; font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; }
 
 /* Form */
-.form { display: grid; gap: 18px; max-width: 560px; }
+.form { display: grid; gap: 18px; width: 100%; }
 .form__grid { display: grid; gap: 16px; }
-@media (min-width: 560px) { .form__grid { grid-template-columns: 1fr 1fr; } }
+/* Breakpoint raised from 560px, which was the same as the form's own old
+   max-width: two columns could only ever be ~270px each. */
+@media (min-width: 680px) { .form__grid { grid-template-columns: 1fr 1fr; } }
 .field { display: grid; gap: 6px; }
 .field--full { grid-column: 1 / -1; }
 .field > span { color: #334155; font-size: 13px; font-weight: 650; }
@@ -55,12 +87,18 @@
 
 .submit {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  min-height: 48px; border: 0; border-radius: 10px; background: var(--accent);
+  min-height: 48px; border: 0; border-radius: 10px; background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 0 22px; color: white; font-weight: 750; font-size: 15px; cursor: pointer;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), filter var(--dur-base) var(--ease-enter);
 }
-.submit:not(:disabled):hover { background: var(--accent-strong); }
-.submit:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
+.submit:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.submit:not(:disabled):active { transform: translateY(0); box-shadow: var(--elev-1); }
+.submit:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; box-shadow: none; }
 
 .feedback { display: flex; align-items: flex-start; gap: 8px; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; }
 .feedback svg { flex: none; margin-top: 1px; }
@@ -68,8 +106,16 @@
 .feedback--ok { border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534; }
 
 /* Detail */
-.detail { display: grid; gap: 20px; max-width: 680px; }
-.panel { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 22px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+.detail {
+  display: grid;
+  gap: 20px;
+  /* A readable measure, centred: the shell is 1120px wide, and a 680px column
+     stuck to its left edge is what made the form look off-centre on a laptop.
+     min() still lets it fill the viewport on a phone. */
+  width: min(100%, 880px);
+  margin-inline: auto;
+}
+.panel { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 22px; box-shadow: var(--elev-2); }
 .panel__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .panel__title { margin: 0; font-size: 18px; color: #0f172a; }
 .meta { display: grid; gap: 10px; margin: 0; }
@@ -78,8 +124,11 @@
 .meta__row dd { margin: 0; color: #0f172a; font-weight: 650; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.linkBtn { display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; background: var(--accent); padding: 12px 20px; color: white; font-weight: 750; font-size: 14px; text-decoration: none; transition: background-color 180ms ease; }
-.linkBtn:hover { background: var(--accent-strong); }
+.linkBtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%); padding: 12px 20px; color: white; font-weight: 750; font-size: 14px; text-decoration: none; box-shadow: var(--elev-2); transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), filter var(--dur-base) var(--ease-enter); }
+.linkBtn svg { transition: transform var(--dur-base) var(--ease-enter); }
+.linkBtn:hover { transform: translateY(-2px); box-shadow: var(--elev-accent); filter: saturate(1.06); }
+.linkBtn:hover svg { transform: translateX(3px); }
+.linkBtn:active { transform: translateY(0); box-shadow: var(--elev-1); }
 .ghostBtn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 10px; background: white; padding: 11px 18px; color: #475569; font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease; }
 .ghostBtn:hover { border-color: #94a3b8; color: #0f172a; }
 .dangerBtn { border-color: #fecaca; color: #991b1b; }
@@ -89,20 +138,43 @@
 .back:hover { color: #0f172a; text-decoration: underline; }
 
 /* Status tracker */
-.tracker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
-.tracker__step { display: grid; gap: 6px; justify-items: center; text-align: center; }
-.tracker__dot { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #e2e8f0; color: #64748b; font-size: 13px; font-weight: 800; }
-.tracker__step[data-done="true"] .tracker__dot { background: var(--accent); color: white; }
-.tracker__label { color: var(--muted); font-size: 11px; font-weight: 700; }
-.tracker__step[data-done="true"] .tracker__label { color: var(--accent-strong); }
+.tracker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; position: relative; }
+.tracker::before {
+  content: ""; position: absolute; top: 15px; left: 12%; right: 12%; height: 2px;
+  background: #e2e8f0;
+}
+.tracker__step { display: grid; gap: 6px; justify-items: center; text-align: center; position: relative; }
+.tracker__dot {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px;
+  background: #e2e8f0; color: #64748b; font-size: 13px; font-weight: 800;
+  box-shadow: 0 0 0 3px white;
+  transition: transform var(--dur-base) var(--ease-enter), background-color var(--dur-base) var(--ease-enter), color var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter);
+}
+.tracker__step[data-done="true"] .tracker__dot {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: white;
+  transform: scale(1.06);
+  box-shadow: 0 0 0 3px white, var(--elev-accent);
+}
+.tracker__label { color: var(--muted); font-size: 11px; font-weight: 700; transition: color var(--dur-base) var(--ease-enter); }
+.tracker__step[data-done="true"] .tracker__label { color: var(--accent-strong); font-weight: 800; }
 
-/* Rich permit form: sections, availability panel, consent. */
-.section { display: grid; gap: 14px; padding: 20px 0; border-top: 1px solid var(--border); }
-.section:first-of-type { border-top: 0; padding-top: 4px; }
+/* Rich permit form: sections, availability panel, consent.
+   Each block is a grouped surface. Bare border-top dividers made a 40-field
+   application read as one undifferentiated column. */
+.section {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafdfc 100%);
+  box-shadow: var(--elev-1);
+}
 .section__title { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
 .section__note { margin: -6px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 .grid3 { display: grid; gap: 16px; }
-@media (min-width: 640px) { .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 820px) { .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .readonly {
   display: flex; align-items: center; min-height: 46px;
@@ -129,3 +201,18 @@
 
 .member { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: #f8fafc; }
 .member button { justify-self: start; }
+
+/*
+ * Small screens. The panel, the section cards and the member/availability insets
+ * all stack their own padding, so on a ~440px phone the three levels together ate
+ * most of the width the inputs actually need. Reclaim it here rather than by
+ * shrinking the fields.
+ */
+@media (max-width: 640px) {
+  .panel { padding: 14px; border-radius: 14px; }
+  .section { padding: 16px 14px; }
+  .availability { padding: 12px 13px; }
+  .member { padding: 14px 13px; }
+  .row { padding: 14px 15px 14px 18px; }
+  .head__title { font-size: clamp(1.45rem, 7vw, 1.8rem); }
+}

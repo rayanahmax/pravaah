@@ -7,7 +7,10 @@
   margin-bottom: 28px;
   border: 1px solid var(--border);
   border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #f5faf9 100%);
+  background:
+    radial-gradient(110% 130% at 100% 0%, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0) 58%),
+    linear-gradient(180deg, #ffffff 0%, #f5faf9 100%);
+  box-shadow: var(--elev-2);
 }
 
 .hero__eyebrow {
@@ -42,15 +45,23 @@
   gap: 8px;
   align-self: start;
   border-radius: 10px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   padding: 12px 20px;
   color: white;
   font-weight: 750;
   font-size: 15px;
   text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), filter var(--dur-base) var(--ease-enter);
 }
-.hero__cta:hover { background: var(--accent-strong); }
+.hero__cta svg { transition: transform var(--dur-base) var(--ease-enter); }
+.hero__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.hero__cta:hover svg { transform: translateX(3px); }
+.hero__cta:active { transform: translateY(0); box-shadow: var(--elev-1); }
 
 .grid {
   display: grid;
@@ -61,6 +72,8 @@
 @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .dest {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -70,14 +83,31 @@
   padding: 20px;
   color: inherit;
   text-decoration: none;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--elev-2);
   cursor: pointer;
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), border-color var(--dur-base) var(--ease-enter);
+}
+/* Accent rule that draws in as the pointer arrives. */
+.dest::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, #14b8a6 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-slow) var(--ease-enter);
 }
 .dest:hover {
   border-color: var(--accent);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
+  box-shadow: var(--elev-4);
+  transform: translateY(calc(-1 * var(--lift)));
+}
+.dest:hover::before { transform: scaleX(1); }
+/* Touch has no hover, so the press state is the only feedback it gets. */
+.dest:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-2);
 }
 .dest:focus-visible { outline: 3px solid #0891b2; outline-offset: 3px; }
 
@@ -100,13 +130,29 @@
   overflow: hidden;
 }
 
+/* Declared here, not in tourist-motion.css: a CSS Module rewrites animation-name,
+   so a keyframe defined in another file can never be reached from this one. */
+@keyframes grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 .meter { display: grid; gap: 6px; margin-top: auto; }
 .meter__row { display: flex; align-items: baseline; justify-content: space-between; font-size: 12px; color: var(--muted); }
-.meter__track { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
-.meter__fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
-.meter__fill[data-status="NEAR_CAPACITY"] { background: #d97706; }
-.meter__fill[data-status="RESTRICTED"] { background: #ea580c; }
-.meter__fill[data-status="CLOSED"] { background: #dc2626; }
+.meter__track { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06); }
+/* The width is still the server's figure; scaleX only draws it in, so the meter
+   animates without ever misreporting occupancy. */
+.meter__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent) 0%, #0d9488 100%);
+  transform-origin: left;
+  animation: grow var(--dur-slow) var(--ease-enter) both;
+}
+.meter__fill[data-status="NEAR_CAPACITY"] { background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%); }
+.meter__fill[data-status="RESTRICTED"] { background: linear-gradient(90deg, #ea580c 0%, #f97316 100%); }
+.meter__fill[data-status="CLOSED"] { background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); }
 
 /* Detail page */
 .detail { display: grid; gap: 20px; }
@@ -131,11 +177,19 @@
 .cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 4px; }
 .cta-primary {
   display: inline-flex; align-items: center; gap: 8px;
-  border-radius: 10px; background: var(--accent); padding: 13px 22px;
+  border-radius: 10px; background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%); padding: 13px 22px;
   color: white; font-weight: 750; font-size: 15px; text-decoration: none;
-  transition: background-color 180ms ease;
+  box-shadow: var(--elev-2);
+  transition: transform var(--dur-base) var(--ease-enter), box-shadow var(--dur-base) var(--ease-enter), filter var(--dur-base) var(--ease-enter);
 }
-.cta-primary:hover { background: var(--accent-strong); }
-.cta-primary[aria-disabled="true"] { background: #cbd5e1; color: #64748b; pointer-events: none; }
+.cta-primary svg { transition: transform var(--dur-base) var(--ease-enter); }
+.cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-accent);
+  filter: saturate(1.06);
+}
+.cta-primary:hover svg { transform: translateX(3px); }
+.cta-primary:active { transform: translateY(0); box-shadow: var(--elev-1); }
+.cta-primary[aria-disabled="true"] { background: #cbd5e1; color: #64748b; box-shadow: none; pointer-events: none; }
 .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; font-weight: 650; text-decoration: none; }
 .back-link:hover { color: #0f172a; text-decoration: underline; }
