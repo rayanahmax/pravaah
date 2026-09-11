@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CloudSun, ListChecks, Megaphone } from "lucide-react";
+import { ArrowLeft, ArrowRight, ListChecks, Megaphone } from "lucide-react";
 import { EmptyState, StatusPill } from "@/components/tourist/ui";
+import { WeatherPanel, WeatherUnavailable } from "@/components/tourist/weather/weather-panel";
 import { describeCapacity, formatPercent, severityTone } from "@/lib/department-labels";
 import { findDestination } from "@/services/destinations";
 import { buildCapacityView } from "@/services/capacity";
 import { readQuota } from "@/services/quotas";
 import { listActiveAlerts } from "@/services/alerts";
+import { fetchDestinationWeather } from "@/services/weather";
 import { todayIsoDate } from "@/lib/date";
 import styles from "@/components/tourist/discovery/discovery.module.css";
 
@@ -14,9 +16,11 @@ export const metadata: Metadata = { title: "Destination" };
 
 /**
  * Destination detail. Public read of the same authoritative sources the console
- * uses: capacity band (engine-derived), today's quota and active alerts. Weather
- * and readiness are informational panels with no endpoints yet (Phases 14/15), so
- * they render a clear "coming soon" state rather than fabricated data.
+ * uses: capacity band (engine-derived), today's quota and active alerts. Weather is
+ * informational and fetched alongside them; `fetchDestinationWeather` never throws,
+ * so an outage or an unset coordinate renders a quiet failure panel instead of
+ * taking the page — and therefore the capacity and permit information — down with
+ * it (PRD §15).
  */
 export default async function DestinationDetailPage({
   params,
@@ -35,10 +39,13 @@ export default async function DestinationDetailPage({
   }
 
   const date = todayIsoDate();
-  const [capacity, quota, alerts] = await Promise.all([
+  const [capacity, quota, alerts, weather] = await Promise.all([
     buildCapacityView(destination),
     readQuota(destination.id, date),
     listActiveAlerts(destination.id),
+    // Cannot reject: fetchDestinationWeather returns a typed result for every
+    // failure, so a provider outage adds no more than its own latency here.
+    fetchDestinationWeather(destination),
   ]);
 
   const view = describeCapacity(capacity);
@@ -141,11 +148,11 @@ export default async function DestinationDetailPage({
             )}
           </section>
 
-          <section className={styles["stub-panel"]} aria-label="Weather">
-            <span className={styles["stub-panel__tag"]}><CloudSun size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} /> Coming soon</span>
-            <h3>Weather &amp; conditions</h3>
-            <p>Authoritative weather and advisories for this destination arrive with a later phase.</p>
-          </section>
+          {weather.ok ? (
+            <WeatherPanel report={weather.report} />
+          ) : (
+            <WeatherUnavailable reason={weather.code} message={weather.message} />
+          )}
 
           <Link href={`/readiness?destination=${destination.id}`} className={styles["stub-panel"]} aria-label="Readiness check">
             <span className={styles["stub-panel__tag"]}><ListChecks size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} /> Informational</span>

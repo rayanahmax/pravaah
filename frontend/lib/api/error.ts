@@ -23,6 +23,7 @@ export type ApiErrorCode =
   | "DESTINATION_CLOSED"
   | "DESTINATION_RESTRICTED"
   | "NOT_CONFIGURED"
+  | "UPSTREAM_UNAVAILABLE"
   | "DATABASE_ERROR";
 
 const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
@@ -39,10 +40,19 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   DESTINATION_CLOSED: 409,
   DESTINATION_RESTRICTED: 409,
   NOT_CONFIGURED: 409,
+  UPSTREAM_UNAVAILABLE: 503,
   DATABASE_ERROR: 500,
 };
 
-/** Codes the pure permit rules may return; they are already API codes. */
+/**
+ * Codes the pure permit rules may return; they are already API codes.
+ *
+ * UPSTREAM_UNAVAILABLE is deliberately NOT in this set. apiRejection echoes a
+ * database rejection only when its code appears here, and no permit rule can
+ * produce an upstream provider failure — adding it would let a rejection coming
+ * out of request_permit or check_in_permit claim a cause it cannot legitimately
+ * mean. Weather reports its own failures through apiError directly instead.
+ */
 const RULE_CODES = new Set<string>([
   "DATE_IN_PAST",
   "GROUP_SIZE_INVALID",

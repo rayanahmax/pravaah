@@ -141,7 +141,18 @@ Return deterministic structured readiness results. AI explanation is optional an
 
 ## Weather
 ### GET /api/v1/destinations/{destination_id}/weather
-Server retrieves and normalizes external weather data.
+Server retrieves and normalizes external weather data. Public, like destination information. The provider is Open-Meteo (PRD §15) and requires no key.
+
+Returns a normalized report, not the provider's body: current temperature, feels-like, humidity, precipitation, wind, a WMO-derived condition label, the observation instant with its UTC offset, and a deterministic advisory level of `CLEAR`, `ADVISORY` or `POOR`.
+
+Failures are typed and never break a permit or occupancy read (PRD §15):
+
+| Code | Status | Meaning |
+| --- | --- | --- |
+| `NOT_CONFIGURED` | 409 | The destination has no usable coordinates. |
+| `UPSTREAM_UNAVAILABLE` | 503 | The provider timed out, refused, or returned an unreadable body. |
+
+Weather is informational. It does not decide access, approve permits, or forecast — `access_status` and the capacity engine remain the only authority.
 
 ## API Rules
 1. Validate all requests.

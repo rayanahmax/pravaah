@@ -1,0 +1,205 @@
+/*
+ * Weather conditions panel (Phase 15).
+ *
+ * A CSS Module scoped to the weather surface, matching the rule that each tourist
+ * stream carries its own styles rather than editing the frozen globals.css. Depth
+ * and easing come from the tokens in app/tourist-motion.css.
+ */
+
+.panel {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 110% at 100% 0%, rgba(8, 145, 178, 0.08) 0%, rgba(8, 145, 178, 0) 55%),
+    linear-gradient(180deg, #ffffff 0%, #fafdfc 100%);
+  box-shadow: var(--elev-2);
+}
+
+/* A failed lookup is deliberately quieter than a live reading: no colour, no
+   data, so it cannot be mistaken for a benign forecast. */
+.panel[data-failed="true"] {
+  background: #f8fafc;
+  box-shadow: var(--elev-1);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.headText {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tag {
+  justify-self: start;
+  border-radius: 999px;
+  background: #eef2f7;
+  padding: 3px 10px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---- Reading ---- */
+
+.current {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  flex: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--cyan-soft) 0%, #d9f4ef 100%);
+  color: var(--accent-strong);
+  box-shadow: var(--elev-1);
+}
+
+.reading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.temp {
+  color: #0f172a;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.unit {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.condition {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+/* ---- Stats ---- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.stat {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.8);
+  padding: 11px 13px;
+}
+
+.stat dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.stat dd {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Advisory ---- */
+
+.advisory {
+  margin: 0;
+  border-left: 3px solid var(--accent);
+  padding: 2px 0 2px 13px;
+  color: #334155;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+.advisory[data-level="ADVISORY"] {
+  border-left-color: #d97706;
+}
+.advisory[data-level="POOR"] {
+  border-left-color: #dc2626;
+  color: #7f1d1d;
+  font-weight: 650;
+}
+
+.factors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.factors li {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: white;
+  padding: 5px 11px;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 650;
+  box-shadow: var(--elev-1);
+}
+
+/* ---- Provenance ---- */
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.disclaimer {
+  margin: 0;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 12px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (min-width: 560px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
