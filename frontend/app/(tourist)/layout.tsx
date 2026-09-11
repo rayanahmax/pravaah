@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { MapPin, ShieldCheck, TicketCheck } from "lucide-react";
 import { getUser } from "@/lib/auth";
+import { touristNavigation } from "./tourist-nav-items";
+import { TouristMobileNav } from "./tourist-mobile-nav";
 import styles from "./tourist-shell.module.css";
 
 /**
@@ -27,10 +29,14 @@ export default async function TouristLayout({ children }: { children: ReactNode 
 
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/destinations" className={styles.brand}>
-            <span className={styles.brandMark} aria-hidden="true">
-              <ShieldCheck size={20} />
-            </span>
+          <Link href="/visitor" className={styles.brand}>
+            <Image
+              src="/logo.jpeg"
+              width={38}
+              height={38}
+              alt="PRAVAAH emblem"
+              className={styles.brandLogo}
+            />
             <span className={styles.brandText}>
               <strong>PRAVAAH</strong>
               <small>Visitor access</small>
@@ -38,14 +44,12 @@ export default async function TouristLayout({ children }: { children: ReactNode 
           </Link>
 
           <nav className={styles.nav} aria-label="Primary">
-            <Link href="/destinations" className={styles.navLink}>
-              <MapPin size={17} aria-hidden="true" />
-              <span>Destinations</span>
-            </Link>
-            <Link href="/my-permits" className={styles.navLink}>
-              <TicketCheck size={17} aria-hidden="true" />
-              <span>My permits</span>
-            </Link>
+            {touristNavigation.map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href} className={styles.navLink}>
+                <Icon size={17} aria-hidden="true" />
+                <span>{label}</span>
+              </Link>
+            ))}
           </nav>
 
           <div className={styles.auth}>
@@ -80,6 +84,8 @@ export default async function TouristLayout({ children }: { children: ReactNode 
           </span>
         </div>
       </footer>
+
+      <TouristMobileNav />
     </div>
   );
 }
