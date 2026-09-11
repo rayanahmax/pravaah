@@ -1,13 +1,10 @@
 # CODEOWNERS — Phase 13 ownership map
 #
-# Handles are resolved to the repo's collaborators. GitHub auto-requests the right
+# Replace the @owner-b / @owner-c placeholders (and confirm @rayanahmax) with the
+# real GitHub handles of the three owners. GitHub then auto-requests the right
 # reviewer per path and enforces that a shared/foundation file cannot change
 # without the lead — which is what keeps three parallel branches from stepping on
 # each other.
-#
-#   Lead / foundation + QR (Person C) : @rayanahmax
-#   Discovery (Person A)              : @PranjalBidarkoti
-#   Permits journey (Person B)        : @kamishikothari-ghub
 #
 # Rules are matched top-to-bottom; the LAST (most specific) match wins.
 
@@ -30,13 +27,13 @@
 /docs/                             @rayanahmax
 
 # --- Person A — Discovery ---
-/frontend/app/(tourist)/destinations/       @PranjalBidarkoti
-/frontend/components/tourist/discovery/     @PranjalBidarkoti
+/frontend/app/(tourist)/destinations/       @owner-a
+/frontend/components/tourist/discovery/     @owner-a
 
 # --- Person C — QR (more specific than the Permits rule below, so list first) ---
-/frontend/app/(tourist)/my-permits/*/qr/    @rayanahmax
-/frontend/components/tourist/qr/            @rayanahmax
+/frontend/app/(tourist)/my-permits/*/qr/    @owner-c
+/frontend/components/tourist/qr/            @owner-c
 
 # --- Person B — Permit journey ---
-/frontend/app/(tourist)/my-permits/         @kamishikothari-ghub
-/frontend/components/tourist/permits/       @kamishikothari-ghub
+/frontend/app/(tourist)/my-permits/         @owner-b
+/frontend/components/tourist/permits/       @owner-b
