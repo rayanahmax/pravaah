@@ -325,6 +325,21 @@ export function firstErrorMessage(errors: FieldError[]): string {
   return first ? `${first.field}: ${first.message}` : "Invalid request.";
 }
 
+/** Body of POST /api/v1/checkouts — identical contract to check-in (docs/API.md §Check-out). */
+export function parseCheckOut(body: unknown): ParseResult<{ qr_token: string }> {
+  const input = asRecord(body);
+  if (!input) return fail("body", "must be a JSON object");
+
+  const unknown = Object.keys(input).filter((k) => k !== "qr_token");
+  if (unknown.length) return fail(unknown[0], "unknown field");
+
+  if (typeof input.qr_token !== "string" || input.qr_token.trim() === "") {
+    return fail("qr_token", "is required and must be a non-empty string");
+  }
+
+  return { ok: true, value: { qr_token: input.qr_token.trim() } };
+}
+
 /** Returns null when the body is absent or is not valid JSON. */
 export async function readJsonBody(request: Request): Promise<unknown | null> {
   try {
@@ -335,3 +350,4 @@ export async function readJsonBody(request: Request): Promise<unknown | null> {
     return null;
   }
 }
+
