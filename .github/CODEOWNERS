@@ -1,0 +1,39 @@
+# CODEOWNERS — Phase 13 ownership map
+#
+# Replace the @owner-b / @owner-c placeholders (and confirm @rayanahmax) with the
+# real GitHub handles of the three owners. GitHub then auto-requests the right
+# reviewer per path and enforces that a shared/foundation file cannot change
+# without the lead — which is what keeps three parallel branches from stepping on
+# each other.
+#
+# Rules are matched top-to-bottom; the LAST (most specific) match wins.
+
+# Everything defaults to the tech lead / foundation owner.
+*                                  @rayanahmax
+
+# --- Lead-owned, frozen during the sprint (changes need lead review) ---
+/frontend/types/tourist.ts         @rayanahmax
+/frontend/components/tourist/ui/   @rayanahmax
+/frontend/app/(tourist)/layout.tsx @rayanahmax
+/frontend/app/(tourist)/tourist-shell.module.css @rayanahmax
+/frontend/app/page.tsx             @rayanahmax
+/frontend/package.json             @rayanahmax
+/frontend/package-lock.json        @rayanahmax
+/frontend/lib/supabase/            @rayanahmax
+/frontend/services/                @rayanahmax
+/frontend/app/api/                 @rayanahmax
+/frontend/supabase/migrations/     @rayanahmax
+/.github/                          @rayanahmax
+/docs/                             @rayanahmax
+
+# --- Person A — Discovery ---
+/frontend/app/(tourist)/destinations/       @owner-a
+/frontend/components/tourist/discovery/     @owner-a
+
+# --- Person C — QR (more specific than the Permits rule below, so list first) ---
+/frontend/app/(tourist)/my-permits/*/qr/    @owner-c
+/frontend/components/tourist/qr/            @owner-c
+
+# --- Person B — Permit journey ---
+/frontend/app/(tourist)/my-permits/         @owner-b
+/frontend/components/tourist/permits/       @owner-b
