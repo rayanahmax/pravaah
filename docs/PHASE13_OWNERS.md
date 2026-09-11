@@ -32,10 +32,10 @@ the same file — the classic new-file collision cannot happen.
 
 | Owner | Streams | Owns (edit freely) |
 |---|---|---|
-| **Lead / foundation** | shell, primitives, contract, CI | `app/(tourist)/layout.tsx`, `app/(tourist)/tourist-shell.module.css`, `components/tourist/ui/**`, `types/tourist.ts`, `app/page.tsx`, `package.json`, `lib/supabase/**`, `services/**`, `app/api/**`, `supabase/migrations/**`, `.github/**`, `docs/**` |
-| **Person A — Discovery** | browse destinations | `app/(tourist)/destinations/**`, `components/tourist/discovery/**` |
-| **Person B — Permits** | request → status → cancel | `app/(tourist)/my-permits/page.tsx`, `my-permits/new/**`, `my-permits/[id]/page.tsx`, `components/tourist/permits/**` |
-| **Person C — QR + polish** | QR screen, cross-links, a11y/responsive, integration smoke | `app/(tourist)/my-permits/[id]/qr/**`, `components/tourist/qr/**` |
+| **Lead / foundation — @rayanahmax** | shell, primitives, contract, CI | `app/(tourist)/layout.tsx`, `app/(tourist)/tourist-shell.module.css`, `components/tourist/ui/**`, `types/tourist.ts`, `app/page.tsx`, `package.json`, `lib/supabase/**`, `services/**`, `app/api/**`, `supabase/migrations/**`, `.github/**`, `docs/**` |
+| **Person A — Discovery — @PranjalBidarkoti** | browse destinations | `app/(tourist)/destinations/**`, `components/tourist/discovery/**` |
+| **Person B — Permits — @kamishikothari-ghub** | request → status → cancel | `app/(tourist)/my-permits/page.tsx`, `my-permits/new/**`, `my-permits/[id]/page.tsx`, `components/tourist/permits/**` |
+| **Person C — QR + polish — @rayanahmax** | QR screen, cross-links, a11y/responsive, integration smoke | `app/(tourist)/my-permits/[id]/qr/**`, `components/tourist/qr/**` |
 
 Route paths are namespaced away from the operator console (which already owns
 `/permits`, `/capacity`, `/overview`), so a tourist and an operator never collide
