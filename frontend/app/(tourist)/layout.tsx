@@ -8,6 +8,7 @@ import {
   type EmergencyContact,
 } from "@/lib/emergency-contacts";
 import { SosDock } from "@/components/tourist/sos/sos-dock";
+import { ChatDock } from "@/components/tourist/chat/chat-dock";
 import { TouristHeaderNav, TouristMobileNav } from "./tourist-nav";
 import "../tourist-motion.css";
 import styles from "./tourist-shell.module.css";
@@ -22,7 +23,9 @@ import styles from "./tourist-shell.module.css";
  * a blanket redirect that would lock tourists out of discovery.
  *
  * The header/footer are foundation-owned; the three workstreams fill the content
- * area between them and never edit this shell.
+ * area between them and never edit this shell. The two floating visitor controls
+ * (SOS and the assistant) are the one exception and are wired here on purpose:
+ * they must sit on every tourist surface, not be re-imported by each page.
  */
 export default async function TouristLayout({ children }: { children: ReactNode }) {
   const user = await getUser();
@@ -99,6 +102,7 @@ export default async function TouristLayout({ children }: { children: ReactNode 
 
       <TouristMobileNav />
 
+      <ChatDock />
       <SosDock contacts={emergencyContacts} signedIn={Boolean(user)} />
     </div>
   );

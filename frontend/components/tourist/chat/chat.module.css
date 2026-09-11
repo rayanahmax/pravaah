@@ -1,0 +1,263 @@
+/*
+ * Floating visitor assistant (tourist shell).
+ *
+ * Themed to the existing teal (var(--accent)/--accent-soft/--accent-strong) so it
+ * reads as part of PRAVAAH rather than a bolted-on widget. It docks bottom-LEFT,
+ * deliberately the opposite corner to the red SOS control, so the two never stack
+ * or fight for the same tap target. Clearance above the fixed mobile tab bar mirrors
+ * the shell's own 62px + safe-area inset.
+ *
+ * The @keyframes live in this file: a CSS Module rewrites animation names per file,
+ * so a shared keyframe would never resolve here.
+ */
+
+.dock {
+  position: fixed;
+  z-index: 44;
+  left: 14px;
+  bottom: calc(62px + env(safe-area-inset-bottom) + 14px);
+}
+
+@media (min-width: 720px) {
+  .dock {
+    left: 24px;
+    bottom: 24px;
+  }
+}
+
+/* ---- Launcher ---- */
+
+.fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 18px 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: var(--elev-accent), var(--elev-2);
+  touch-action: manipulation;
+  user-select: none;
+  transition: transform var(--dur-fast) var(--ease-enter),
+    box-shadow var(--dur-fast) var(--ease-enter), filter var(--dur-fast) var(--ease-enter);
+}
+.fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(15, 118, 110, 0.34), var(--elev-3);
+  filter: saturate(1.05);
+}
+.fab:active {
+  transform: translateY(0);
+  box-shadow: var(--elev-1);
+}
+.fab:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+/* ---- Panel ---- */
+
+.panel {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 12px);
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 28px));
+  max-height: min(72vh, 520px);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--elev-4);
+  overflow: hidden;
+  animation: prv-chat-pop var(--dur-base) var(--ease-enter);
+}
+
+@keyframes prv-chat-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #f5faf9 100%);
+}
+.headTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accent-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+.close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+.close:hover {
+  background: #f1f5f9;
+  color: var(--foreground);
+}
+
+/* ---- Transcript ---- */
+
+.log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+.bubble {
+  max-width: 86%;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.assistant {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+  background: #ffffff;
+  color: var(--foreground);
+}
+.user {
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+  background: var(--accent);
+  color: #ffffff;
+}
+.typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.spin {
+  animation: prv-chat-spin 900ms linear infinite;
+}
+@keyframes prv-chat-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Suggestion chips ---- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 0;
+}
+.chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 6px 11px;
+  color: var(--accent-strong);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+.chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ---- Composer ---- */
+
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px 4px;
+}
+.field {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #ffffff;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.field:disabled {
+  background: #f8fafc;
+  color: var(--muted);
+}
+.send {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.send:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+.send:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.disclaimer {
+  margin: 0;
+  padding: 6px 14px 12px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.45;
+}
