@@ -59,9 +59,22 @@ test("unknown fields are rejected on both create and patch", () => {
 
 test("numeric destination fields are range checked", () => {
   assert.equal(parseDestinationCreate({ name: "X", latitude: 91 }).ok, false);
-  assert.equal(parseDestinationCreate({ name: "X", latitude: 28.6 }).ok, false); // not a whole number
   assert.equal(parseDestinationCreate({ name: "X", elevation: -5 }).ok, false);
   assert.equal(parseDestinationCreate({ name: "X", elevation: 3600 }).ok, true);
+
+  // This test previously asserted `latitude: 28.6` was REJECTED with the comment
+  // "not a whole number". That was deliberate at the time but wrong: latitude and
+  // longitude are NUMERIC in the schema and in docs/DATABASE.md, and 28.6 is a
+  // real coordinate. Integer-only validation made a precise position
+  // inexpressible, which Phase 15 weather cannot work with — whole degrees are
+  // ~111 km apart. Corrected rather than worked around.
+  assert.equal(parseDestinationCreate({ name: "X", latitude: 28.6, longitude: 77.209 }).ok, true);
+  assert.equal(parseDestinationCreate({ name: "X", latitude: -12.9791 }).ok, true);
+  assert.equal(parseDestinationCreate({ name: "X", longitude: 181 }).ok, false);
+  // Precision is capped: six decimals is already ~0.1 m.
+  assert.equal(parseDestinationCreate({ name: "X", latitude: 12.1234567 }).ok, false);
+  // Elevation stays a whole number; the cap is per-field, not global.
+  assert.equal(parseDestinationCreate({ name: "X", elevation: 1200.5 }).ok, false);
 });
 
 test("capacity update accepts exactly one bounded integer", () => {

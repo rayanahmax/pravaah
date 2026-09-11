@@ -57,6 +57,39 @@ export function parseInteger(
   return { ok: true, value };
 }
 
+/**
+ * For NUMERIC columns that are genuinely fractional — coordinates today.
+ *
+ * parseInteger cannot serve these: destinations.latitude and .longitude are
+ * NUMERIC in the schema and in docs/DATABASE.md, but the endpoint rejected
+ * anything but a whole number, so a real position was inexpressible. At latitude
+ * 13 a whole degree is roughly 111 km, which is the difference between reporting
+ * conditions for a destination and reporting them for somewhere else entirely.
+ */
+export function parseNumber(
+  value: unknown,
+  field: string,
+  bounds: { min: number; max?: number; maxDecimals?: number }
+): ParseResult<number> {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fail(field, "must be a number");
+  }
+  if (value < bounds.min) return fail(field, `must be at least ${bounds.min}`);
+  if (bounds.max !== undefined && value > bounds.max) {
+    return fail(field, `must be at most ${bounds.max}`);
+  }
+  if (bounds.maxDecimals !== undefined) {
+    // Counted from the literal rather than via float rounding, so 47.9999999
+    // cannot slip past a toFixed comparison.
+    const text = String(value);
+    const decimals = text.includes(".") ? text.split(".")[1].length : 0;
+    if (decimals > bounds.maxDecimals) {
+      return fail(field, `must have at most ${bounds.maxDecimals} decimal places`);
+    }
+  }
+  return { ok: true, value };
+}
+
 function asRecord(body: unknown): Record<string, unknown> | null {
   if (typeof body !== "object" || body === null || Array.isArray(body)) return null;
   return body as Record<string, unknown>;
@@ -91,6 +124,22 @@ function optionalInteger(
   const value = input[field];
   if (value === undefined || value === null) return value as number | null | undefined;
   const parsed = parseInteger(value, field, bounds);
+  if (!parsed.ok) {
+    errors.push(...parsed.errors);
+    return undefined;
+  }
+  return parsed.value;
+}
+
+function optionalNumber(
+  input: Record<string, unknown>,
+  field: string,
+  bounds: { min: number; max?: number; maxDecimals?: number },
+  errors: FieldError[]
+): number | null | undefined {
+  const value = input[field];
+  if (value === undefined || value === null) return value as number | null | undefined;
+  const parsed = parseNumber(value, field, bounds);
   if (!parsed.ok) {
     errors.push(...parsed.errors);
     return undefined;
@@ -143,8 +192,10 @@ function parseDestination(body: unknown, mode: "create" | "patch"): ParseResult<
   const description = optionalText(input, "description", 5000, errors);
   const type = optionalText(input, "type", 100, errors);
   const difficulty = optionalText(input, "difficulty", 50, errors);
-  const latitude = optionalInteger(input, "latitude", { min: -90, max: 90 }, errors);
-  const longitude = optionalInteger(input, "longitude", { min: -180, max: 180 }, errors);
+  // NUMERIC in the schema, and fractional in practice: whole degrees are ~111 km
+  // apart, which is not a destination position. Six decimals is about 0.1 m.
+  const latitude = optionalNumber(input, "latitude", { min: -90, max: 90, maxDecimals: 6 }, errors);
+  const longitude = optionalNumber(input, "longitude", { min: -180, max: 180, maxDecimals: 6 }, errors);
   const elevation = optionalInteger(input, "elevation", { min: 0, max: 20000 }, errors);
   const estimatedDuration = optionalInteger(
     input,
