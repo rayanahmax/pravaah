@@ -21,7 +21,7 @@ const navigation: Array<{
   { href: "/overview", label: "Overview", shortLabel: "Overview", icon: LayoutDashboard },
   { href: "/capacity", label: "Capacity", shortLabel: "Capacity", icon: Gauge },
   { href: "/permits", label: "Permits", shortLabel: "Permits", icon: TicketCheck },
-  { href: "/qr-checkpoint", label: "QR checkpoint", shortLabel: "Scan", icon: QrCode },
+  { href: "/qr-checkpoint", label: "Checkpoint (staff)", shortLabel: "Scan", icon: QrCode },
   { href: "/control-room", label: "Control room", shortLabel: "Control", icon: SlidersHorizontal },
 ];
 

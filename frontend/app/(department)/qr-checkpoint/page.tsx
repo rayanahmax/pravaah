@@ -42,9 +42,9 @@ export default async function QrCheckpointPage({
     <div className="checkpoint-page">
       <LiveRefresh tables={LIVE_TABLES} destinationId={destination.id} />
       <PageHeader
-        eyebrow="Field checkpoint"
-        title="QR checkpoint"
-        description="Process a visitor's permit at the gate. Every accept or reject decision is made by the server, never by this screen."
+        eyebrow="Field checkpoint · department staff"
+        title="Checkpoint scanner"
+        description="For staff only: scan a visitor's QR pass to check them in or out. Visitors show their QR from My permits — they do not use this screen. Every accept or reject decision is made by the server, never here."
         aside={
           <div className="header-aside">
             <Badge tone={view.tone}>
