@@ -32,7 +32,6 @@ DECLARE
   v_check_in public.check_ins;
   v_occupancy numeric := 0;
   v_new_occupancy numeric := 0;
-  v_new_status text;
 BEGIN
   IF NOT public.is_department_operator() THEN
     RETURN public.permit_refusal('FORBIDDEN',
@@ -53,9 +52,12 @@ BEGIN
       'Permit not found for the provided QR token.');
   END IF;
 
-  -- Transactional advisory lock on destination
+  -- Transactional advisory lock on (destination, visit date), the SAME key
+  -- request_permit and review_permit take in migration 008. Sharing the key is
+  -- what makes the occupancy read here serialize against a concurrent approval
+  -- for the same destination and day; a destination-only lock would not.
   PERFORM pg_advisory_xact_lock(
-    hashtextextended(v_permit.destination_id::text, 0)
+    hashtextextended(v_permit.destination_id::text || '|' || v_permit.visit_date::text, 0)
   );
 
   -- Re-read under lock with FOR UPDATE
@@ -131,17 +133,23 @@ BEGIN
         || v_capacity.maximum_capacity || ' while ' || v_occupancy || ' are inside.');
   END IF;
 
-  -- Update daily_quotas visitors_admitted
+  -- Update daily_quotas visitors_admitted. Fail closed on a missing quota row,
+  -- the same way request_permit and review_permit do in 008: an undeclared day
+  -- limit is not an unlimited one, and admitting without recording would let
+  -- occupancy and the admitted counter disagree.
   SELECT * INTO v_quota
     FROM public.daily_quotas
    WHERE destination_id = v_permit.destination_id
      AND quota_date = v_permit.visit_date;
 
-  IF v_quota.id IS NOT NULL THEN
-    UPDATE public.daily_quotas
-       SET visitors_admitted = COALESCE(visitors_admitted, 0) + v_permit.group_size
-     WHERE id = v_quota.id;
+  IF NOT FOUND THEN
+    RETURN public.permit_refusal('NOT_CONFIGURED',
+      'No daily quota is set for this date, so check-in cannot be processed.');
   END IF;
+
+  UPDATE public.daily_quotas
+     SET visitors_admitted = COALESCE(visitors_admitted, 0) + v_permit.group_size
+   WHERE id = v_quota.id;
 
   -- Create check-in record
   INSERT INTO public.check_ins (
@@ -158,17 +166,14 @@ BEGIN
    WHERE id = v_permit.id
   RETURNING * INTO v_permit;
 
-  -- Compute new occupancy & capacity status
+  -- Compute new occupancy. The capacity *status band* is not derived here:
+  -- lib/capacity.ts is the single source of the PRD §6 thresholds (its header
+  -- states that outright) and is what GET /destinations/{id}/capacity returns
+  -- through. Re-implementing the comparison in SQL dropped restricted_threshold
+  -- and let the two endpoints disagree for the same row, so the caller runs the
+  -- numbers through evaluateCapacity() instead. This function returns only the
+  -- raw inputs that call needs.
   v_new_occupancy := v_occupancy + v_permit.group_size;
-  IF v_capacity.maximum_capacity = 0 OR v_new_occupancy >= v_capacity.maximum_capacity THEN
-    v_new_status := 'CLOSED';
-  ELSIF (v_new_occupancy::numeric / v_capacity.maximum_capacity::numeric) * 100 > COALESCE(v_capacity.near_capacity_threshold, 90) THEN
-    v_new_status := 'RESTRICTED';
-  ELSIF (v_new_occupancy::numeric / v_capacity.maximum_capacity::numeric) * 100 > COALESCE(v_capacity.available_threshold, 70) THEN
-    v_new_status := 'NEAR_CAPACITY';
-  ELSE
-    v_new_status := 'AVAILABLE';
-  END IF;
 
   RETURN jsonb_build_object(
     'ok', true,
@@ -182,11 +187,12 @@ BEGIN
     ),
     'permit', public.permit_summary(v_permit),
     'capacity', jsonb_build_object(
-      'capacity', v_capacity.maximum_capacity,
-      'occupancy', v_new_occupancy,
-      'remaining', GREATEST(0, v_capacity.maximum_capacity - v_new_occupancy),
-      'percentage', round((v_new_occupancy::numeric / NULLIF(v_capacity.maximum_capacity, 0)::numeric) * 100, 1),
-      'status', v_new_status
+      'maximum_capacity',        v_capacity.maximum_capacity,
+      'occupancy',               v_new_occupancy,
+      'available_threshold',     v_capacity.available_threshold,
+      'near_capacity_threshold', v_capacity.near_capacity_threshold,
+      'restricted_threshold',    v_capacity.restricted_threshold,
+      'access_status',           v_destination.access_status
     )
   );
 END;
