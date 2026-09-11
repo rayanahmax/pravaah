@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { resolveLandingPath } from "@/lib/post-auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,11 +14,15 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated, to whichever surface the role owns.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace("/overview");
-    });
+    async function redirectIfSignedIn() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) router.replace(await resolveLandingPath());
+    }
+    void redirectIfSignedIn();
   }, [supabase, router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,7 +41,9 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/overview");
+    // The role decides the destination: operators get the console, visitors get
+    // their own home. Server-side guards are unchanged by this choice.
+    router.push(await resolveLandingPath());
     router.refresh();
   }
 
@@ -44,7 +51,8 @@ export default function LoginPage() {
     <>
       <h1>Sign in</h1>
       <p className="page-header__description">
-        Access the department operations console.
+        Sign in to request and track permits as a visitor, or to open the department operations
+        console. You are taken to the surface your account belongs to.
       </p>
 
       <form onSubmit={handleSubmit} className="auth-form">
@@ -61,7 +69,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="operator@example.com"
+            placeholder="you@example.com"
             autoComplete="email"
           />
         </label>
@@ -86,6 +94,8 @@ export default function LoginPage() {
       <p className="auth-footer">
         Don&apos;t have an account?{" "}
         <Link href="/register">Create one</Link>
+        {" · "}
+        <Link href="/">Start over</Link>
       </p>
     </>
   );

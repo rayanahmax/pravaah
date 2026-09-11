@@ -1,18 +1,40 @@
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import styles from "./auth.module.css";
+
+/**
+ * Shared shell for sign-in and sign-up.
+ *
+ * Both audiences pass through these forms now, so the brand is the product rather
+ * than the department console, and the wordmark links back to the public landing
+ * page instead of stranding someone inside the auth flow. The pages themselves are
+ * client components and cannot export metadata, so the title is set here.
+ */
+export const metadata: Metadata = {
+  title: "Access your account",
+  description:
+    "Sign in to PRAVAAH to request and track visitor permits, or to open the department operations console.",
+};
+
+export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="auth-layout">
       <div className="auth-card">
-        <div className="auth-brand">
-          <span className="brand__mark">
-            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-            </svg>
-          </span>
-          <div>
+        <Link href="/" className={`auth-brand ${styles.brand}`}>
+          <Image
+            src="/logo.jpeg"
+            width={40}
+            height={40}
+            alt="PRAVAAH emblem"
+            className={styles.logo}
+          />
+          <span>
             <strong>PRAVAAH</strong>
-            <small>Department console</small>
-          </div>
-        </div>
+            <small>Regulated visitor access</small>
+          </span>
+        </Link>
         {children}
       </div>
     </div>

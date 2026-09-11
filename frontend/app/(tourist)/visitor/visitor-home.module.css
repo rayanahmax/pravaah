@@ -1,0 +1,361 @@
+/*
+ * Visitor home (`/visitor`) styles — CSS Module, co-located with the page.
+ * globals.css is frozen, so the tourist surface keeps its own vocabulary here.
+ */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.head__eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.head__title {
+  margin: 0;
+  max-width: 24ch;
+  color: #0f172a;
+  font-size: clamp(1.85rem, 5vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.head__desc {
+  max-width: 64ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+/* ---- Primary actions ---- */
+
+.actions {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  padding: 22px;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.action:hover {
+  border-color: var(--accent);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+.action:focus-visible {
+  outline: 3px solid #0891b2;
+  outline-offset: 3px;
+}
+
+.action--primary {
+  border-color: #99f6e4;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+}
+
+.action__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--cyan-soft);
+  color: var(--accent);
+}
+.action--primary .action__icon {
+  background: var(--accent);
+  color: white;
+}
+
+.action__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  color: #0f172a;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+.action__title svg {
+  flex: none;
+  color: var(--accent);
+  transition: transform 180ms ease;
+}
+.action:hover .action__title svg {
+  transform: translateX(3px);
+}
+
+.action__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.action__tag {
+  align-self: start;
+  border-radius: 999px;
+  background: #eef2f7;
+  padding: 4px 11px;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---- Secondary links ---- */
+
+.secondary {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 34px;
+}
+
+.secondary__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: white;
+  padding: 14px 16px;
+  color: #0f172a;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+.secondary__link:hover {
+  border-color: var(--accent);
+  background: #f8fafc;
+}
+.secondary__link > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.secondary__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.secondary__text small {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+.secondary__link svg {
+  flex: none;
+  color: var(--accent);
+}
+
+/* ---- Permit strip ---- */
+
+.section {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: white;
+  padding: 22px;
+}
+
+.section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.section__head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.section__head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.rows {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: #f8fafc;
+  padding: 13px 15px;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+.row:hover {
+  border-color: var(--accent);
+  background: #f0fdfa;
+}
+
+/* The row carries two links (detail + QR pass), so it cannot be one link itself. */
+.row__link {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+.row__link:focus-visible {
+  outline: 3px solid #0891b2;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.row__main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.row__dest {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row__meta {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.row__right {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+.row__qr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  background: var(--accent);
+  padding: 7px 12px;
+  color: white;
+  font-size: 12.5px;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 180ms ease;
+}
+.row__qr:hover {
+  background: var(--accent-strong);
+}
+
+/* Actions that belong to a shared EmptyState, which has no slot of its own. */
+.emptyRow {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.emptyRow__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.emptyBtn {
+  border-radius: 9px;
+  background: var(--accent);
+  padding: 10px 16px;
+  color: white;
+  font-size: 13.5px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background-color 180ms ease;
+}
+.emptyBtn:hover {
+  background: var(--accent-strong);
+}
+.emptyLink {
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: var(--accent-strong);
+  font-size: 13.5px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.emptyLink:hover {
+  background: var(--accent-soft);
+}
+
+/* ---- Notice ---- */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 22px;
+  border: 1px solid #bae6fd;
+  border-left-width: 4px;
+  border-radius: 12px;
+  background: #f0f9ff;
+  padding: 14px 16px;
+  color: #075985;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.notice svg {
+  flex: none;
+  margin-top: 2px;
+}
+.notice a {
+  color: #075985;
+  font-weight: 750;
+  text-decoration: underline;
+}
+
+/* ---- Responsive ---- */
+
+@media (min-width: 700px) {
+  .actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

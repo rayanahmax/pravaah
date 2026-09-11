@@ -1,0 +1,22 @@
+/*
+ * Auth shell branding. globals.css already owns the card, form and field styles
+ * and is frozen, so this module adds only the piece the auth pages were missing:
+ * the product emblem, sized to sit inside the existing `.auth-brand` row.
+ */
+
+.logo {
+  display: block;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: white;
+  object-fit: cover;
+}
+
+/* globals.css has no blanket anchor reset, so the linked brand carries its own. */
+.brand {
+  color: inherit;
+  text-decoration: none;
+}

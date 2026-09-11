@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { resolveLandingPath } from "@/lib/post-auth";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -15,11 +16,15 @@ export default function RegisterPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated, to whichever surface the role owns.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace("/overview");
-    });
+    async function redirectIfSignedIn() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) router.replace(await resolveLandingPath());
+    }
+    void redirectIfSignedIn();
   }, [supabase, router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -64,7 +69,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/overview");
+    router.push(await resolveLandingPath());
     router.refresh();
   }
 
@@ -134,6 +139,8 @@ export default function RegisterPage() {
       <p className="auth-footer">
         Already have an account?{" "}
         <Link href="/login">Sign in</Link>
+        {" · "}
+        <Link href="/">Start over</Link>
       </p>
     </>
   );
