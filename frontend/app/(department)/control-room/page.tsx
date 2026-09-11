@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Gauge, LockKeyhole, Megaphone, QrCode, TicketCheck } from "lucide-react";
+import { ArrowRight, Gauge, Megaphone, QrCode, TicketCheck } from "lucide-react";
 import { PageHeader } from "@/components/department/page-header";
 import { Badge } from "@/components/department/badge";
 import { DestinationSwitcher } from "@/components/department/destination-switcher";
 import { ActivityFeed } from "@/components/department/activity-feed";
 import { AlertsList } from "@/components/department/alerts-list";
+import { AccessControls } from "@/components/department/access-controls";
 import { ConsoleError, EmptyDestinations } from "@/components/department/console-states";
 import { describeCapacity } from "@/lib/department-labels";
 import { resolveActiveDestination } from "@/lib/department";
@@ -36,7 +37,7 @@ export default async function ControlRoomPage({
   }
 
   const view = describeCapacity(snapshot.capacity);
-  const closed = snapshot.capacity.status === "CLOSED";
+  const overrideLabel = destination.access_status.charAt(0) + destination.access_status.slice(1).toLowerCase();
 
   return (
     <>
@@ -94,23 +95,20 @@ export default async function ControlRoomPage({
         </section>
       </div>
 
-      <section className="panel access-panel" aria-labelledby="access-heading">
-        <div>
-          <p className="eyebrow">Access state</p>
-          <h2 id="access-heading">{destination.name}</h2>
-          <p>
-            Occupancy {snapshot.capacity.occupancy} of {snapshot.capacity.capacity} is reported as{" "}
-            {view.label.toLowerCase()}.
-            {view.overrideNote ? ` ${view.overrideNote}.` : ""}
-          </p>
-        </div>
-        <div className="access-panel__side">
+      <section className="panel" aria-labelledby="access-heading">
+        <div className="panel__heading">
+          <div>
+            <p className="eyebrow">Access control</p>
+            <h2 id="access-heading">Department access override</h2>
+          </div>
           <Badge tone={view.tone}>{view.label}</Badge>
-          <p className="override-hint">
-            <LockKeyhole aria-hidden="true" size={14} />
-            {closed ? "Access is currently closed." : "Manual close / reopen is scheduled with department access controls (Phase 11)."}
-          </p>
         </div>
+        <p className="panel__hint">
+          Current override is <strong>{overrideLabel}</strong>. Occupancy {snapshot.capacity.occupancy}{" "}
+          of {snapshot.capacity.capacity} is reported as {view.label.toLowerCase()}.
+          {view.overrideNote ? ` ${view.overrideNote}.` : ""}
+        </p>
+        <AccessControls destinationId={destination.id} currentStatus={destination.access_status} />
       </section>
     </>
   );

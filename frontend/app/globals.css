@@ -316,3 +316,14 @@ th, td { border-top: 1px solid var(--border); padding: 14px 20px; white-space: n
 .skeleton--card { height: 112px; }
 .skeleton--panel { height: 180px; margin-top: 18px; }
 @keyframes skeleton-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+/* Department access override controls (Phase 11). */
+.access-controls { display: grid; gap: 12px; }
+.access-controls__buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.access-controls__note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.access-btn { display: inline-flex; min-height: 42px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 9px; background: white; padding: 0 16px; color: #334155; font-size: 13px; font-weight: 750; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
+.access-btn:disabled { opacity: .5; cursor: not-allowed; }
+.access-btn--restrict:not(:disabled):hover { border-color: #fdba74; background: #fff7ed; color: #9a3412; }
+.access-btn--close:not(:disabled):hover { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+.access-btn--reopen:not(:disabled):hover { border-color: #86efac; background: #f0fdf4; color: #166534; }
+.access-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); opacity: 1; }
