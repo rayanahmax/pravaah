@@ -78,7 +78,7 @@ export function DepartmentNav({ variant }: { variant: "desktop" | "mobile" }) {
       </nav>
       <div className="sidebar__footer">
         <span className="status-dot" aria-hidden="true" />
-        <span><strong>UI Phase 1</strong><small>Read-only prototype</small></span>
+        <span><strong>Live console</strong><small>Server-authoritative data</small></span>
       </div>
     </aside>
   );

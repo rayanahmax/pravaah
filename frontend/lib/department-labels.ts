@@ -1,0 +1,115 @@
+/**
+ * Pure presentation helpers shared by the department console.
+ *
+ * Deliberately free of any I/O and of server-only imports so both Server
+ * Components and Client Components can use it. It maps the authoritative
+ * backend states onto the label + badge tone already defined in
+ * globals.css; it never decides a status on its own (AGENTS.md rules 6-7).
+ */
+
+import type { CapacityStatus } from "@/lib/capacity";
+import type { PermitStatus } from "@/lib/permit-rules";
+import type { AlertRow } from "@/types/rows";
+
+export type BadgeTone = "default" | "green" | "pending" | "restricted";
+
+export const CAPACITY_STATUS_LABEL: Record<CapacityStatus, string> = {
+  AVAILABLE: "Available",
+  NEAR_CAPACITY: "Near capacity",
+  RESTRICTED: "Restricted",
+  CLOSED: "Closed",
+};
+
+const CAPACITY_STATUS_TONE: Record<CapacityStatus, BadgeTone> = {
+  AVAILABLE: "green",
+  NEAR_CAPACITY: "pending",
+  RESTRICTED: "restricted",
+  CLOSED: "restricted",
+};
+
+/**
+ * A capacity status plus the department access override. When the override
+ * forced the value, `overridden` is true and we surface the underlying computed
+ * state so an operator is never surprised about why a band reads the way it does.
+ */
+export function describeCapacity(result: {
+  status: CapacityStatus;
+  computedStatus: CapacityStatus;
+  overridden: boolean;
+}): { label: string; tone: BadgeTone; overrideNote: string | null } {
+  return {
+    label: CAPACITY_STATUS_LABEL[result.status],
+    tone: CAPACITY_STATUS_TONE[result.status],
+    overrideNote: result.overridden
+      ? `Set by department override (calculated: ${CAPACITY_STATUS_LABEL[result.computedStatus]})`
+      : null,
+  };
+}
+
+export const PERMIT_STATUS_LABEL: Record<PermitStatus, string> = {
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  RESTRICTED: "Restricted",
+  CANCELLED: "Cancelled",
+  EXPIRED: "Expired",
+  CHECKED_IN: "Checked in",
+  COMPLETED: "Completed",
+};
+
+const PERMIT_STATUS_TONE: Record<PermitStatus, BadgeTone> = {
+  PENDING: "pending",
+  APPROVED: "green",
+  REJECTED: "restricted",
+  RESTRICTED: "restricted",
+  CANCELLED: "default",
+  EXPIRED: "default",
+  CHECKED_IN: "green",
+  COMPLETED: "green",
+};
+
+export function permitBadge(status: PermitStatus): { label: string; tone: BadgeTone } {
+  return { label: PERMIT_STATUS_LABEL[status], tone: PERMIT_STATUS_TONE[status] };
+}
+
+export function severityTone(severity: AlertRow["severity"]): BadgeTone {
+  if (severity === "CRITICAL") return "restricted";
+  if (severity === "WARNING") return "restricted";
+  return "pending";
+}
+
+/**
+ * Whether a permit can still be moved by an operator decision, matching the
+ * states the review_permit machine accepts from. Terminal or in-field states
+ * render no action buttons rather than a button that would be refused.
+ */
+export function isDecisionPending(status: PermitStatus): boolean {
+  return status === "PENDING";
+}
+
+/** Local wall-clock HH:MM for a stored ISO instant; blank when unparseable. */
+export function formatClock(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const time = Date.parse(iso);
+  if (Number.isNaN(time)) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(time));
+}
+
+/** Human day label relative to the given reference date (defaults to now). */
+export function describeDay(isoDate: string, reference: Date = new Date()): string {
+  const date = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  const startOf = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const days = Math.round((startOf(date) - startOf(reference)) / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" }).format(date);
+}
+
+export function formatPercent(value: number): string {
+  return `${value}%`;
+}

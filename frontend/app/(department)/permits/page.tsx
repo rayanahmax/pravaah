@@ -1,25 +1,139 @@
 import type { Metadata } from "next";
-import { Clock3, FileSearch, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { PageHeader } from "@/components/department/page-header";
+import { Badge } from "@/components/department/badge";
+import { DestinationSwitcher } from "@/components/department/destination-switcher";
+import { PermitActions } from "@/components/department/permit-actions";
+import { ConsoleError, EmptyDestinations } from "@/components/department/console-states";
+import { describeDay, permitBadge } from "@/lib/department-labels";
+import { resolveActiveDestination } from "@/lib/department";
+import { listOperatorPermits } from "@/services/permits";
+import type { PermitStatus } from "@/lib/permit-rules";
 
 export const metadata: Metadata = { title: "Permits" };
 
-const permits = [
-  { reference: "PRM-•••-219", status: "Pending", visit: "Today", submitted: "08:31" },
-  { reference: "PRM-•••-184", status: "Approved", visit: "Today", submitted: "07:55" },
-  { reference: "PRM-•••-163", status: "Restricted", visit: "Tomorrow", submitted: "Yesterday" },
-  { reference: "PRM-•••-141", status: "Completed", visit: "Yesterday", submitted: "2 days ago" },
+const FILTERS: { value: string; label: string; status?: PermitStatus }[] = [
+  { value: "", label: "All" },
+  { value: "PENDING", label: "Pending", status: "PENDING" },
+  { value: "APPROVED", label: "Approved", status: "APPROVED" },
+  { value: "RESTRICTED", label: "Restricted", status: "RESTRICTED" },
+  { value: "CHECKED_IN", label: "Checked in", status: "CHECKED_IN" },
+  { value: "COMPLETED", label: "Completed", status: "COMPLETED" },
 ];
 
-export default function PermitsPage() {
+/**
+ * A privacy-preserving permit reference: enough to tell rows apart on the review
+ * queue without surfacing the full UUID or any owner identity (API rule 4).
+ */
+function shortReference(id: string): string {
+  return `PRM-${id.slice(-4).toUpperCase()}`;
+}
+
+export default async function PermitsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const { destinations, destination } = await resolveActiveDestination(params);
+  if (!destination) return <EmptyDestinations />;
+
+  const rawStatus = Array.isArray(params.status) ? params.status[0] : params.status;
+  const active = FILTERS.find((f) => f.value === rawStatus);
+  const status = active?.status;
+
+  let permits;
+  try {
+    permits = await listOperatorPermits({ destinationId: destination.id, status });
+  } catch (error) {
+    console.error("[permits] read failed:", error);
+    return <ConsoleError message="The permit queue could not be loaded. Please try again." />;
+  }
+
+  const destinationParam = `destination=${encodeURIComponent(destination.id)}`;
+
   return (
     <>
-      <PageHeader eyebrow="Permit status tracker" title="Permit queue" description="Review a privacy-preserving presentation of permit references and their current prototype states." aside={<span className="status-badge"><Clock3 aria-hidden="true" size={15} /> 12 pending</span>} />
+      <PageHeader
+        eyebrow="Permit status tracker"
+        title="Permit queue"
+        description="References are shown generically. Every decision is re-checked against current capacity and quota on the server before it is applied."
+        aside={
+          <div className="header-aside">
+            <Badge tone="pending">{permits.length} shown</Badge>
+            <DestinationSwitcher
+              destinations={destinations.map((d) => ({ id: d.id, name: d.name }))}
+              activeId={destination.id}
+            />
+          </div>
+        }
+      />
+
+      <div className="filter-tabs" role="group" aria-label="Filter permits by status">
+        {FILTERS.map((filter) => {
+          const href = filter.value ? `?${destinationParam}&status=${filter.value}` : `?${destinationParam}`;
+          const isActive = (rawStatus ?? "") === filter.value;
+          return (
+            <Link
+              key={filter.value || "all"}
+              href={href}
+              scroll={false}
+              aria-current={isActive ? "true" : undefined}
+              className="filter-tab"
+              data-active={isActive}
+            >
+              {filter.label}
+            </Link>
+          );
+        })}
+      </div>
+
       <section className="panel table-panel" aria-labelledby="permit-list-heading">
-        <div className="panel__heading"><div><p className="eyebrow">Current queue</p><h2 id="permit-list-heading">Permit references</h2></div><span className="muted-label">Generic references only</span></div>
-        <div className="table-wrap"><table><thead><tr><th>Reference</th><th>Visit</th><th>Submitted</th><th>Status</th></tr></thead><tbody>{permits.map((permit) => <tr key={permit.reference}><td><span className="reference"><FileSearch aria-hidden="true" size={17} />{permit.reference}</span></td><td>{permit.visit}</td><td>{permit.submitted}</td><td><span className={`status-badge status-badge--${permit.status.toLowerCase()}`}>{permit.status === "Approved" && <ShieldCheck aria-hidden="true" size={14} />}{permit.status}</span></td></tr>)}</tbody></table></div>
+        <div className="panel__heading">
+          <div>
+            <p className="eyebrow">Current queue</p>
+            <h2 id="permit-list-heading">{active?.label ?? "All"} permits</h2>
+          </div>
+        </div>
+
+        {permits.length === 0 ? (
+          <div className="table-empty">
+            <Inbox aria-hidden="true" size={26} />
+            <p>No permits match this view for {destination.name}.</p>
+          </div>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Reference</th>
+                  <th scope="col">Visit</th>
+                  <th scope="col">Group</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="th-actions">Decision</th>
+                </tr>
+              </thead>
+              <tbody>
+                {permits.map((permit) => {
+                  const badge = permitBadge(permit.status);
+                  return (
+                    <tr key={permit.id}>
+                      <td><span className="reference">{shortReference(permit.id)}</span></td>
+                      <td>{describeDay(permit.visit_date)}</td>
+                      <td>{permit.group_size}</td>
+                      <td><Badge tone={badge.tone}>{badge.label}</Badge></td>
+                      <td className="td-actions">
+                        <PermitActions permitId={permit.id} status={permit.status} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
-      <p className="data-note"><strong>Prototype data — not live.</strong> Permit decisions are not available in UI Phase 1.</p>
     </>
   );
 }
