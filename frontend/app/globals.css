@@ -282,6 +282,57 @@ th, td { border-top: 1px solid var(--border); padding: 14px 20px; white-space: n
 .alert-item__message { margin: 7px 0 0; color: #334155; font-size: 13px; line-height: 1.55; }
 .alert-item__window { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
 
+/* Alert management (PRD §16, Phase 16). Additive only — the read-only alert styles
+   above are unchanged, so the console overview and the tourist page are unaffected. */
+.alert-item__head { flex-wrap: wrap; }
+.alert-item__badges { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.alert-item__actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+/*
+ * A notice that is not currently displaying is dimmed and marked "no". The state
+ * badge already carries the word, so this is emphasis rather than the signal itself
+ * — colour alone never decides meaning here.
+ */
+.alert-item[data-state="inactive"], .alert-item[data-state="expired"] {
+  border-left-color: #94a3b8;
+  background: #f8fafc;
+  color: var(--muted);
+}
+.alert-item[data-state="inactive"] .alert-item__head strong,
+.alert-item[data-state="expired"] .alert-item__head strong { color: #64748b; }
+
+.alert-manage { margin-top: 16px; }
+
+.alert-toggle { display: inline-flex; align-items: center; gap: 9px; }
+.alert-toggle__error { color: #991b1b; font-size: 12px; font-weight: 650; }
+
+.alert-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.alert-form__row { display: grid; gap: 12px; }
+@media (min-width: 620px) { .alert-form__row { grid-template-columns: minmax(0,2fr) minmax(0,1fr); } }
+.alert-form textarea {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  background: white;
+  color: var(--foreground);
+  resize: vertical;
+  transition: border-color 180ms ease;
+}
+.alert-form textarea:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,.15); }
+.alert-form__hint { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.alert-form__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.alert-form__actions .primary-button, .alert-form__actions .secondary-button { min-height: 44px; }
+
 /* Permit decisions in the table. */
 .th-actions, .td-actions { text-align: right; }
 .permit-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }

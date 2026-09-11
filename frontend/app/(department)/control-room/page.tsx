@@ -6,11 +6,14 @@ import { Badge } from "@/components/department/badge";
 import { DestinationSwitcher } from "@/components/department/destination-switcher";
 import { ActivityFeed } from "@/components/department/activity-feed";
 import { AlertsList } from "@/components/department/alerts-list";
+import { AlertForm } from "@/components/department/alert-form";
 import { AccessControls } from "@/components/department/access-controls";
 import { ConsoleError, EmptyDestinations } from "@/components/department/console-states";
 import { describeCapacity } from "@/lib/department-labels";
+import { alertState } from "@/lib/alert-rules";
 import { resolveActiveDestination } from "@/lib/department";
 import { getDepartmentSnapshot } from "@/services/dashboard";
+import { listAllForDestination } from "@/services/alerts";
 import { LiveRefresh } from "@/components/department/live-refresh";
 
 export const metadata: Metadata = { title: "Control Room" };
@@ -40,12 +43,21 @@ export default async function ControlRoomPage({
   if (!destination) return <EmptyDestinations />;
 
   let snapshot;
+  let alerts;
+  const now = new Date();
   try {
-    snapshot = await getDepartmentSnapshot(destination);
+    [snapshot, alerts] = await Promise.all([
+      getDepartmentSnapshot(destination),
+      // The management view needs rows that are NOT displaying, which the
+      // snapshot's active-only read deliberately hides.
+      listAllForDestination(destination.id),
+    ]);
   } catch (error) {
     console.error("[control-room] snapshot failed:", error);
     return <ConsoleError message="Operational data could not be loaded. Please try again." />;
   }
+
+  const liveCount = alerts.filter((alert) => alertState(alert, now) === "ACTIVE").length;
 
   const view = describeCapacity(snapshot.capacity);
   const overrideLabel = destination.access_status.charAt(0) + destination.access_status.slice(1).toLowerCase();
@@ -89,11 +101,20 @@ export default async function ControlRoomPage({
           <div className="panel__heading">
             <div>
               <p className="eyebrow">Field safety</p>
-              <h2 id="alerts-heading">Active alerts</h2>
+              <h2 id="alerts-heading">Destination alerts</h2>
             </div>
-            <span className="muted-label"><Megaphone aria-hidden="true" size={14} /> {snapshot.alerts.length}</span>
+            <span className="muted-label">
+              <Megaphone aria-hidden="true" size={14} /> {liveCount} live · {alerts.length} total
+            </span>
           </div>
-          <AlertsList alerts={snapshot.alerts} />
+          <p className="panel__hint">
+            Notices raised here appear to visitors on this destination&apos;s page while they are
+            live. Alerts are informational: they never change access status, capacity or quota.
+          </p>
+          <AlertForm destinationId={destination.id} />
+          <div className="alert-manage">
+            <AlertsList alerts={alerts} now={now} manage />
+          </div>
         </section>
 
         <section className="panel" aria-labelledby="activity-heading">
