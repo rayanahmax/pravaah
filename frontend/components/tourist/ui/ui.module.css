@@ -127,6 +127,30 @@
   color: #9a3412;
 }
 
+/*
+ * Alert severity ladder (PRD §16, migration 015). Values mirror the
+ * `.status-badge--*` rules in globals.css so the console badge and the tourist
+ * pill describe the same level the same way. severityTone() can return these, and
+ * an unmapped tone would render an unstyled pill.
+ */
+.pill--caution {
+  border-color: #fde68a;
+  background: #fefce8;
+  color: #854d0e;
+}
+
+.pill--warning {
+  border-color: #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.pill--critical {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 .pill__dot {
   width: 8px;
   height: 8px;

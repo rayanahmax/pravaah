@@ -66,7 +66,8 @@ export type AlertRow = {
   destination_id: string;
   title: string;
   message: string;
-  severity: "INFO" | "WARNING" | "CRITICAL";
+  /** Escalating order lives in ALERT_SEVERITIES (lib/department-labels.ts). */
+  severity: "INFO" | "CAUTION" | "WARNING" | "CRITICAL";
   active: boolean;
   starts_at: string | null;
   ends_at: string | null;

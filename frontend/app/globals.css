@@ -65,6 +65,13 @@ h2 { margin: 0; font-size: 18px; letter-spacing: -.015em; }
 .status-badge--green, .status-badge--approved, .status-badge--completed { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
 .status-badge--pending { border-color: #bae6fd; background: #f0f9ff; color: #075985; }
 .status-badge--restricted { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+/* Alert severity ladder (PRD §16, migration 015). Additive only — the rules above
+   are untouched, so no existing badge shifts colour. WARNING is separated from
+   RESTRICTED by border weight alone being insufficient: they are different
+   domains, and an operator must not read one as the other. */
+.status-badge--caution { border-color: #fde68a; background: #fefce8; color: #854d0e; }
+.status-badge--warning { border-color: #fdba74; background: #fff7ed; color: #9a3412; }
+.status-badge--critical { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
 .metric-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 20px; }
 .status-card { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); padding: 19px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .status-card[data-tone="accent"] { border-top: 3px solid var(--accent); padding-top: 17px; }
@@ -268,6 +275,8 @@ th, td { border-top: 1px solid var(--border); padding: 14px 20px; white-space: n
 .alert-item[data-severity="critical"] { border-left-color: #dc2626; background: #fef2f2; }
 .alert-item[data-severity="warning"] { border-left-color: #d97706; background: #fffbeb; }
 .alert-item[data-severity="info"] { border-left-color: #0284c7; background: #f0f9ff; }
+/* CAUTION sits between "know this" and "hazard present" (PRD §16, migration 015). */
+.alert-item[data-severity="caution"] { border-left-color: #ca8a04; background: #fefce8; }
 .alert-item__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .alert-item__head strong { font-size: 14px; }
 .alert-item__message { margin: 7px 0 0; color: #334155; font-size: 13px; line-height: 1.55; }

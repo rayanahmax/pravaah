@@ -9,9 +9,44 @@
 
 import type { CapacityStatus } from "@/lib/capacity";
 import type { PermitStatus } from "@/lib/permit-rules";
-import type { AlertRow } from "@/types/rows";
 
-export type BadgeTone = "default" | "green" | "pending" | "restricted";
+export type BadgeTone =
+  | "default"
+  | "green"
+  | "pending"
+  | "restricted"
+  /*
+   * Alert-only tones. Deliberately not reusing `restricted`: capacity and permit
+   * badges already mean "attention, restricted state" with it, and alerts need one
+   * distinguishable step per severity. The previous mapping gave WARNING and
+   * CRITICAL the same tone, so a badge could not tell a hazard from a danger.
+   */
+  | "caution"
+  | "warning"
+  | "critical";
+
+/** Alert severities in escalating order (PRD §16; widened by migration 015). */
+export const ALERT_SEVERITIES = ["INFO", "CAUTION", "WARNING", "CRITICAL"] as const;
+export type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
+
+const SEVERITY_TONE: Record<AlertSeverity, BadgeTone> = {
+  INFO: "pending",
+  CAUTION: "caution",
+  WARNING: "warning",
+  CRITICAL: "critical",
+};
+
+const SEVERITY_RANK: Record<AlertSeverity, number> = {
+  INFO: 0,
+  CAUTION: 1,
+  WARNING: 2,
+  CRITICAL: 3,
+};
+
+/** Numeric order, for sorting a list or picking the dominant alert. */
+export function severityRank(severity: AlertSeverity): number {
+  return SEVERITY_RANK[severity];
+}
 
 export const CAPACITY_STATUS_LABEL: Record<CapacityStatus, string> = {
   AVAILABLE: "Available",
@@ -97,10 +132,9 @@ export function permitReference(id: string): string {
   return `PRM-${id.slice(-REFERENCE_LENGTH).toUpperCase()}`;
 }
 
-export function severityTone(severity: AlertRow["severity"]): BadgeTone {
-  if (severity === "CRITICAL") return "restricted";
-  if (severity === "WARNING") return "restricted";
-  return "pending";
+/** One tone per level. See lib/department-labels.test.ts, which pins that. */
+export function severityTone(severity: AlertSeverity): BadgeTone {
+  return SEVERITY_TONE[severity];
 }
 
 /**
