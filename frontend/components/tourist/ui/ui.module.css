@@ -218,6 +218,28 @@
   .skeleton { animation: none; }
 }
 
+/* Route-level loading boundary (app/(tourist)/loading.tsx). Mirrors the shape of a
+   tourist page — a heading line then a card grid — so navigation paints a skeleton
+   immediately instead of a blank wait while the server render resolves. */
+.loading {
+  display: grid;
+  gap: 22px;
+}
+.loading__title {
+  height: 30px;
+  width: min(100%, 340px);
+}
+.loading__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 720px) {
+  .loading__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Route stub (placeholder pages created by the foundation). */
 .stub {
   display: grid;

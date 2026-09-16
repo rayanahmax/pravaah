@@ -25,11 +25,30 @@ export async function getUser() {
 }
 
 /**
+ * Get the authenticated user from the request cookie WITHOUT a network call.
+ *
+ * supabase.auth.getUser() validates the token against the auth server on every
+ * call — a round-trip that ran on every page render and made navigation feel
+ * slow. getSession() decodes the session already in the cookie and only reaches
+ * the network when the access token is expired. The id it returns is trusted only
+ * as far as RLS allows: every following query runs as that token, so a forged or
+ * revoked session simply reads nothing. Use this where we only need "who is
+ * signed in"; the login/register flows keep getUser() to validate.
+ */
+export async function getSessionUser() {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user ?? null;
+}
+
+/**
  * Get the authenticated user's profile from the profiles table.
  * Returns null if not authenticated or no profile exists.
  */
 export async function getProfile(): Promise<Profile | null> {
-  const user = await getUser();
+  const user = await getSessionUser();
   if (!user) return null;
 
   const supabase = await createClient();

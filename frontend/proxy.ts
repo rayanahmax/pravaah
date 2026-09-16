@@ -25,9 +25,16 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh the session — this is critical for auth to work.
-  // If the session is expired, this will refresh it and set new cookies.
-  await supabase.auth.getUser();
+  // Refresh the session cookie only when it actually needs refreshing.
+  //
+  // getUser() calls the Supabase auth server on EVERY matched request — a full
+  // network round-trip that ran on every navigation and every <Link> prefetch,
+  // which is the main reason page changes felt slow. getSession() reads the
+  // session from the request cookies and only reaches the network when the
+  // access token is expired and must be renewed, so the common case is local.
+  // Route protection is unaffected: the pages that need an identity still call
+  // getUser()/getProfile() themselves, which validate against the server.
+  await supabase.auth.getSession();
 
   return supabaseResponse;
 }

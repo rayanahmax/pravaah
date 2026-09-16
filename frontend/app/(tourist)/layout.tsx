@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getUser } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 import { listMyPermits } from "@/services/permits";
 import {
   extractEmergencyContacts,
@@ -28,7 +28,7 @@ import styles from "./tourist-shell.module.css";
  * they must sit on every tourist surface, not be re-imported by each page.
  */
 export default async function TouristLayout({ children }: { children: ReactNode }) {
-  const user = await getUser();
+  const user = await getSessionUser();
 
   // The SOS dock can offer the visitor's own emergency contact only if they are
   // signed in. This reads existing data through the same RLS-scoped service the
