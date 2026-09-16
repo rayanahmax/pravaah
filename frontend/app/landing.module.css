@@ -322,10 +322,22 @@
 }
 
 .hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
+  width: 100%;
+  max-width: 560px;
+}
+/* Equal-size pair: each action fills its column and centres its label. When only
+   one is shown (a signed-in account), it drops to its natural width rather than
+   stretching across the empty half of the row. */
+.hero__actions > * {
+  width: 100%;
+  justify-content: center;
+}
+.hero__actions > :only-child {
+  width: auto;
+  justify-self: start;
 }
 
 .cta {
@@ -778,6 +790,9 @@
 @media (min-width: 700px) {
   .hero__inner {
     padding: 40px 38px 120px;
+  }
+  .hero__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .choice {
     grid-template-columns: repeat(2, minmax(0, 1fr));

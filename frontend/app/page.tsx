@@ -121,12 +121,19 @@ export default async function LandingPage() {
               daily quota.
             </p>
             <div className={styles["hero__actions"]}>
-              <Link href="/visitor" className={styles.cta}>
-                {visitorCta} <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-              <Link href={operatorHref} className={styles.ctaAlt}>
-                {operatorCta}
-              </Link>
+              {/* Both actions show to an anonymous visitor. Once signed in, only the
+                  surface that matches the account is offered: a tourist is never shown
+                  the operator action, and an operator is never shown the visitor one. */}
+              {!profile || !isOperator ? (
+                <Link href="/visitor" className={styles.cta}>
+                  {visitorCta} <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+              ) : null}
+              {!profile || isOperator ? (
+                <Link href={operatorHref} className={styles.ctaAlt}>
+                  {operatorCta}
+                </Link>
+              ) : null}
             </div>
             <p className={styles["hero__note"]}>
               <Info size={15} aria-hidden="true" />
