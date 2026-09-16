@@ -73,14 +73,9 @@ export default async function TouristLayout({ children }: { children: ReactNode 
                 Sign out
               </Link>
             ) : (
-              <>
-                <Link href="/login" className={styles.ghost}>
-                  Sign in
-                </Link>
-                <Link href="/register" className={styles.cta}>
-                  Create account
-                </Link>
-              </>
+              <Link href="/register" className={styles.cta}>
+                Create account
+              </Link>
             )}
           </div>
         </div>
