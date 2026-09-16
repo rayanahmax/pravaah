@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
+  CircleUserRound,
   Compass,
   Info,
   QrCode,
@@ -42,6 +43,7 @@ export default async function LandingPage() {
   const operatorHref = isOperator ? "/overview" : "/login";
   const operatorCta = isOperator ? "Open the console" : "Operator sign in";
   const visitorCta = profile ? "Continue to visitor home" : "Continue as visitor";
+  const year = new Date().getFullYear();
 
   return (
     <div className={styles.page}>
@@ -68,12 +70,22 @@ export default async function LandingPage() {
 
           <div className={styles.barActions}>
             {profile ? (
-              <Link href="/logout" className={styles.ghost}>
-                Sign out{displayName ? ` (${displayName.split(" ")[0]})` : ""}
-              </Link>
+              <>
+                <Link
+                  href={isOperator ? "/overview" : "/visitor"}
+                  className={styles.account}
+                  aria-label="Go to your area"
+                >
+                  <CircleUserRound size={16} aria-hidden="true" />
+                  {displayName ? displayName.split(" ")[0] : "Account"}
+                </Link>
+                <Link href="/logout" className={styles.barGhost}>
+                  Sign out
+                </Link>
+              </>
             ) : (
               <>
-                <Link href="/login" className={styles.ghost}>
+                <Link href="/login" className={styles.barGhost}>
                   Sign in
                 </Link>
                 <Link href="/register" className={styles.barCta}>
@@ -271,7 +283,34 @@ export default async function LandingPage() {
 
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
-          <span>PRAVAAH — regulated visitor access</span>
+          <div className={styles.footerBrand}>
+            <strong>PRAVAAH</strong>
+            <span>Responsible tourism through capacity-aware visitor management.</span>
+          </div>
+
+          <nav className={styles.footerCol} aria-label="Platform">
+            <h2>Platform</h2>
+            <Link href="/destinations">Destinations</Link>
+            <Link href="/my-permits">My permits</Link>
+            <Link href="/readiness">Readiness check</Link>
+          </nav>
+
+          <nav className={styles.footerCol} aria-label="Account">
+            <h2>Account</h2>
+            <Link href="/visitor">Visitor home</Link>
+            {profile ? (
+              <Link href="/logout">Sign out</Link>
+            ) : (
+              <>
+                <Link href="/login">Sign in</Link>
+                <Link href="/register">Create account</Link>
+              </>
+            )}
+          </nav>
+        </div>
+
+        <div className={styles.footerBase}>
+          <span>© {year} PRAVAAH — tourism management platform</span>
           <span className={styles.footNote}>
             Capacity, quotas and permit decisions are owned by the department and enforced
             server-side. PRAVAAH does not make safety or medical judgements.

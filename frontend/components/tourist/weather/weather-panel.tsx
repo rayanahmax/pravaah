@@ -104,7 +104,7 @@ export function WeatherPanel({ report }: { report: WeatherReport }) {
   ];
 
   return (
-    <section className={styles.panel} aria-labelledby="weather-heading">
+    <section className={styles.panel} aria-label="Weather and conditions">
       <div className={styles.head}>
         <div className={styles.headText}>
           <p className={styles.eyebrow}>Weather &amp; conditions</p>
@@ -169,7 +169,7 @@ export function WeatherPanel({ report }: { report: WeatherReport }) {
 export function WeatherUnavailable({ reason, message }: { reason: string; message: string }) {
   const configure = reason === "NOT_CONFIGURED";
   return (
-    <section className={styles.panel} aria-labelledby="weather-heading" data-failed="true">
+    <section className={styles.panel} aria-label="Weather and conditions" data-failed="true">
       <div className={styles.head}>
         <div className={styles.headText}>
           <p className={styles.eyebrow}>Weather &amp; conditions</p>

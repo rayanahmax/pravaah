@@ -17,9 +17,10 @@
 
 .card__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: 8px 14px;
   padding: 20px 22px 0;
 }
 

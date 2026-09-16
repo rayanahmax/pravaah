@@ -102,22 +102,24 @@ export function PermitDocument({
 
         <section className={styles["doc__section"]}>
           <h3>Group roster</h3>
-          <table className={styles["doc__table"]}>
-            <thead>
-              <tr><th>#</th><th>Name</th><th>Age</th><th>Nationality</th><th>ID</th></tr>
-            </thead>
-            <tbody>
-              {roster.map((m, i) => (
-                <tr key={i}>
-                  <td>{i + 1}</td>
-                  <td>{m.name || "—"}</td>
-                  <td>{m.age ?? "—"}</td>
-                  <td>{m.nationality || "—"}</td>
-                  <td>{m.idType ? `${m.idType} · ${m.idNumberMasked ?? "—"}` : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={styles["doc__tablewrap"]}>
+            <table className={styles["doc__table"]}>
+              <thead>
+                <tr><th scope="col">#</th><th scope="col">Name</th><th scope="col">Age</th><th scope="col">Nationality</th><th scope="col">ID</th></tr>
+              </thead>
+              <tbody>
+                {roster.map((m, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>{m.name || "—"}</td>
+                    <td>{m.age ?? "—"}</td>
+                    <td>{m.nationality || "—"}</td>
+                    <td>{m.idType ? `${m.idType} · ${m.idNumberMasked ?? "—"}` : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section className={styles["doc__section"]}>

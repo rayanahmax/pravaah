@@ -34,6 +34,14 @@
   background: white;
   border: 1px solid var(--border);
 }
+/* The QR is rendered at a fixed 220px. Card + frame + shell padding push its
+   demand past a 320px viewport, so the code was clipped — the one surface that
+   must never be. Let the SVG shrink to its container and keep it square. */
+.qr svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
 
 .meta { display: grid; gap: 8px; width: 100%; }
 .meta__row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; }
@@ -73,10 +81,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 40px;
   border: 1px solid var(--accent);
   border-radius: 8px;
   background: white;
-  padding: 5px 11px;
+  padding: 0 12px;
   color: var(--accent-strong);
   font-family: inherit;
   font-size: 12.5px;

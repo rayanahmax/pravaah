@@ -168,6 +168,55 @@
   box-shadow: var(--elev-1);
 }
 
+/* Bordered secondary control — same height and rhythm as .barCta so the auth
+   actions read as one button family rather than a link beside a button (§8). */
+.barGhost {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: white;
+  padding: 0 14px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.barGhost:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: #0b4f4a;
+}
+
+/* The signed-in identity is a real, focusable control that goes somewhere, not
+   plaintext — the account name lives inside it (§5). */
+.account {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: white;
+  padding: 0 13px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+.account svg {
+  color: var(--accent);
+}
+.account:hover {
+  border-color: var(--accent);
+  background: #f4faf8;
+}
+
 /* ---- Body frame ---- */
 
 .main {
@@ -643,20 +692,85 @@
   background: linear-gradient(180deg, #ffffff 0%, #f5faf9 100%);
 }
 .footerInner {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 22px 20px;
+  padding: 32px 20px 8px;
+}
+.footerBrand {
+  display: grid;
+  gap: 8px;
+}
+.footerBrand strong {
+  color: #0f172a;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+}
+.footerBrand span {
+  max-width: 34ch;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.footerCol {
+  display: grid;
+  gap: 9px;
+  align-content: start;
+}
+.footerCol h2 {
+  margin: 0 0 2px;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.footerCol a {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+.footerCol a:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+.footerBase {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 24px auto 0;
+  border-top: 1px solid var(--border);
+  padding: 18px 20px 30px;
+  color: var(--muted);
+  font-size: 12.5px;
 }
 .footNote {
   color: #94a3b8;
   font-size: 12px;
   line-height: 1.55;
+}
+@media (min-width: 700px) {
+  .footerInner {
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: 32px;
+  }
+  .footerBase {
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .footNote {
+    text-align: right;
+    max-width: 60ch;
+  }
 }
 
 /* ---- Responsive ---- */

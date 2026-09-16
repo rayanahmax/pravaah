@@ -393,16 +393,16 @@ export function PermitRequestForm({
       <section className={styles.section}>
         <h2 className={styles["section__title"]}>Camera &amp; equipment</h2>
         <div className={styles["form__grid"]}>
-          <label className={styles.field}>
+          <div className={styles.field}>
             <span>Still camera</span>
             <label className={styles.consent}><input type="checkbox" checked={stillCamera} onChange={(e) => setStillCamera(e.target.checked)} disabled={pending} /><span>Carrying still camera(s)</span></label>
             {stillCamera ? <input type="number" min={0} value={stillCount} onChange={(e) => setStillCount(e.target.value)} disabled={pending} aria-label="Number of still cameras" /> : null}
-          </label>
-          <label className={styles.field}>
+          </div>
+          <div className={styles.field}>
             <span>Video camera</span>
             <label className={styles.consent}><input type="checkbox" checked={videoCamera} onChange={(e) => setVideoCamera(e.target.checked)} disabled={pending} /><span>Carrying video camera(s)</span></label>
             {videoCamera ? <input type="number" min={0} value={videoCount} onChange={(e) => setVideoCount(e.target.value)} disabled={pending} aria-label="Number of video cameras" /> : null}
-          </label>
+          </div>
           <label className={`${styles.field} ${styles["field--full"]}`}>
             <span>Special equipment / drone permission</span>
             <input value={special} onChange={(e) => setSpecial(e.target.value)} disabled={pending} placeholder="Optional" />

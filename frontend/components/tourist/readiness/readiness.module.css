@@ -10,7 +10,7 @@
   font-size: 15px; font-family: inherit; background: white; color: var(--foreground); cursor: pointer;
   transition: border-color 180ms ease;
 }
-.field select:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15); }
+.field select:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.35); }
 
 .submit {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;

@@ -82,7 +82,7 @@
   font-size: 15px; font-family: inherit; background: white; color: var(--foreground);
   transition: border-color 180ms ease;
 }
-.field input:focus-visible, .field select:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15); }
+.field input:focus-visible, .field select:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.35); }
 .field input[aria-invalid="true"], .field select[aria-invalid="true"] { border-color: #ef4444; }
 
 .submit {
@@ -196,7 +196,7 @@
 .availability__spin { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
 
 .consent { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #334155; line-height: 1.5; }
-.consent input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--accent); cursor: pointer; }
+.consent input { width: 22px; height: 22px; margin-top: 0; flex: none; accent-color: var(--accent); cursor: pointer; }
 .consent a { color: var(--accent); font-weight: 650; }
 
 .member { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: #f8fafc; }
@@ -215,4 +215,12 @@
   .member { padding: 14px 13px; }
   .row { padding: 14px 15px 14px 18px; }
   .head__title { font-size: clamp(1.45rem, 7vw, 1.8rem); }
+}
+
+/* Four status labels do not fit a ~360px screen: each column drops to ~70px and
+   the 11px labels collide with the connector. Go 2×2 and drop the horizontal
+   connector, which only reads correctly across a single row. */
+@media (max-width: 440px) {
+  .tracker { grid-template-columns: repeat(2, 1fr); row-gap: 16px; }
+  .tracker::before { display: none; }
 }

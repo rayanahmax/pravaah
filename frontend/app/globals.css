@@ -23,6 +23,10 @@
 * { box-sizing: border-box; }
 html { min-width: 320px; scroll-behavior: smooth; }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-geist-sans), Arial, sans-serif; }
+/* One fluid-media reset: an unbounded <img> is the most common cause of horizontal
+   scroll at 320px. max-width only ever shrinks, so it cannot enlarge an intended
+   fixed-size asset; height:auto keeps aspect when it does shrink. */
+img { max-width: 100%; height: auto; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible { outline: 3px solid #0891b2; outline-offset: 3px; }
 button:disabled { cursor: not-allowed; }
@@ -163,7 +167,7 @@ th, td { border-top: 1px solid var(--border); padding: 14px 20px; white-space: n
 .auth-field { display: grid; gap: 6px; }
 .auth-field span { color: #334155; font-size: 13px; font-weight: 650; }
 .auth-field input, .auth-field select { min-height: 46px; border: 1px solid var(--border); border-radius: 9px; padding: 0 14px; font-size: 15px; font-family: inherit; background: white; color: var(--foreground); transition: border-color 180ms ease; }
-.auth-field input:focus, .auth-field select:focus { outline: none; border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,.15); }
+.auth-field input:focus, .auth-field select:focus { outline: none; border-color: #0891b2; box-shadow: 0 0 0 4px rgba(8,145,178,.35); }
 .auth-error { border: 1px solid #fecaca; border-radius: 9px; background: #fef2f2; padding: 12px 14px; color: #991b1b; font-size: 13px; }
 .auth-notice { border: 1px solid #bae6fd; border-radius: 9px; background: #f0f9ff; padding: 12px 14px; color: #075985; font-size: 13px; line-height: 1.5; }
 .auth-footer { margin-top: 24px; text-align: center; color: var(--muted); font-size: 14px; }
@@ -217,7 +221,7 @@ th, td { border-top: 1px solid var(--border); padding: 14px 20px; white-space: n
 .field { display: grid; gap: 6px; }
 .field > span { color: #334155; font-size: 13px; font-weight: 650; }
 .field input { min-height: 46px; border: 1px solid var(--border); border-radius: 9px; padding: 0 14px; font-size: 15px; font-family: inherit; background: white; color: var(--foreground); transition: border-color 180ms ease; }
-.field input:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 3px rgba(8,145,178,.15); }
+.field input:focus-visible { outline: none; border-color: #0891b2; box-shadow: 0 0 0 4px rgba(8,145,178,.35); }
 .field input[aria-invalid="true"] { border-color: #ef4444; }
 .inline-form { display: grid; gap: 14px; }
 .inline-form__fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
@@ -337,7 +341,7 @@ th, td { border-top: 1px solid var(--border); padding: 14px 20px; white-space: n
 .th-actions, .td-actions { text-align: right; }
 .permit-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .permit-actions__buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-.action-btn { display: inline-flex; min-height: 34px; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 8px; background: white; padding: 0 11px; color: #334155; font-size: 12px; font-weight: 700; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
+.action-btn { display: inline-flex; min-height: 40px; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 8px; background: white; padding: 0 11px; color: #334155; font-size: 12px; font-weight: 700; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
 .action-btn:disabled { opacity: .55; cursor: not-allowed; }
 .action-btn--approve:hover:not(:disabled) { border-color: #86efac; background: #f0fdf4; color: #166534; }
 .action-btn--restrict:hover:not(:disabled) { border-color: #fdba74; background: #fff7ed; color: #9a3412; }
