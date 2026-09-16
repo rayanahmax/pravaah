@@ -3,14 +3,13 @@ import Link from "next/link";
 import {
   ArrowRight,
   ClipboardCheck,
-  Info,
   MapPin,
   PlusCircle,
   QrCode,
   TicketCheck,
 } from "lucide-react";
 import { EmptyState, StatusPill } from "@/components/tourist/ui";
-import { getProfile } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { describeDay, permitBadge, permitReference } from "@/lib/department-labels";
 import type { PermitStatus } from "@/lib/permit-rules";
 import { listMyPermits } from "@/services/permits";
@@ -24,28 +23,25 @@ export const metadata: Metadata = { title: "Visitor home" };
 const LIVE_STATUSES: readonly PermitStatus[] = ["PENDING", "APPROVED", "RESTRICTED", "CHECKED_IN"];
 
 /**
- * Visitor home — the landing surface for the tourist role.
+ * Visitor home — the signed-in landing surface for the tourist role.
  *
- * It is deliberately PUBLIC, like the rest of the tourist shell: destination
- * information is open, so the page must not bounce an anonymous visitor to sign-in
- * just to see what PRAVAAH offers. The two actions that need an identity (request
- * a permit, view your permits) are guarded on their own pages by `requireAuth`,
- * which keeps the auth boundary per-route instead of a blanket redirect.
- *
+ * This page is about the visitor's own permits, so it requires an identity:
+ * requireAuth() sends a signed-out visitor to /login rather than showing an empty
+ * dashboard. Public browsing stays open on /destinations and the landing page.
  * Everything shown about a permit is read server-side from the visitor's own
  * RLS-scoped rows; no status, capacity or quota figure is taken from the browser.
  */
 export default async function VisitorHomePage() {
-  const profile = await getProfile();
+  const profile = await requireAuth();
 
   const [permits, destinations] = await Promise.all([
-    profile ? listMyPermits(profile.id).catch(() => []) : Promise.resolve([]),
+    listMyPermits(profile.id).catch(() => []),
     listDestinations().catch(() => []),
   ]);
 
   const nameById = new Map(destinations.map((destination) => [destination.id, destination.name]));
   const live = permits.filter((permit) => LIVE_STATUSES.includes(permit.status)).slice(0, 4);
-  const firstName = profile?.full_name?.trim().split(" ")[0] || null;
+  const firstName = profile.full_name?.trim().split(" ")[0] || null;
 
   return (
     <>
@@ -61,17 +57,6 @@ export default async function VisitorHomePage() {
           </p>
         </div>
       </div>
-
-      {!profile ? (
-        <p className={styles.notice}>
-          <Info size={16} aria-hidden="true" />
-          <span>
-            You can browse destinations without an account. Requesting a permit and tracking your
-            own requests needs one — <Link href="/register">create an account</Link> or{" "}
-            <Link href="/login">sign in</Link>.
-          </span>
-        </p>
-      ) : null}
 
       <div className={styles.actions}>
         <Link href="/my-permits/new" className={`${styles.action} ${styles["action--primary"]}`}>
@@ -144,22 +129,13 @@ export default async function VisitorHomePage() {
           <div className={styles.emptyRow}>
             <EmptyState
               icon={<TicketCheck size={22} aria-hidden="true" />}
-              title={profile ? "No open requests" : "Nothing to show yet"}
-              message={
-                profile
-                  ? "Once you request a permit for a destination it appears here until the visit is complete."
-                  : "Sign in and request a permit to track its status and get a QR pass here."
-              }
+              title="No open requests"
+              message="Once you request a permit for a destination it appears here until the visit is complete."
             />
             <div className={styles["emptyRow__actions"]}>
               <Link href="/my-permits/new" className={styles.emptyBtn}>
                 Request a permit
               </Link>
-              {!profile ? (
-                <Link href="/login" className={styles.emptyLink}>
-                  Sign in
-                </Link>
-              ) : null}
             </div>
           </div>
         ) : (
