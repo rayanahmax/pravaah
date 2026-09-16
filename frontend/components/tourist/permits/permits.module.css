@@ -100,6 +100,11 @@
 .submit:not(:disabled):active { transform: translateY(0); box-shadow: var(--elev-1); }
 .submit:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; box-shadow: none; }
 
+/* Helper under the submit button. Not .section__note, whose -6px top margin is meant
+   to tuck a caption under a section title — reused here it pulled the text up into
+   the button. This wants breathing room instead. */
+.submit__note { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
 .feedback { display: flex; align-items: flex-start; gap: 8px; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; }
 .feedback svg { flex: none; margin-top: 1px; }
 .feedback--error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; }
@@ -134,8 +139,29 @@
 .dangerBtn { border-color: #fecaca; color: #991b1b; }
 .dangerBtn:hover:not(:disabled) { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
 .dangerBtn:disabled { opacity: 0.55; cursor: not-allowed; }
-.back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; font-weight: 650; text-decoration: none; }
-.back:hover { color: #0f172a; text-decoration: underline; }
+.back {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  padding: 0 15px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+.back:hover {
+  border-color: var(--accent);
+  background: #f4faf8;
+  color: var(--accent-strong);
+}
+.back:focus-visible { outline: 3px solid #0891b2; outline-offset: 2px; }
 
 /* Status tracker */
 .tracker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; position: relative; }

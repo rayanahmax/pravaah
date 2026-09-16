@@ -447,7 +447,7 @@ export function PermitRequestForm({
           {pending ? <Loader2 aria-hidden="true" size={18} className="spin" /> : <ArrowRight aria-hidden="true" size={18} />}
           {pending ? "Submitting…" : "Submit permit request"}
         </button>
-        {!valid && !pending ? <p className={styles["section__note"]}>Complete the required (*) fields and accept the rules to submit.</p> : null}
+        {!valid && !pending ? <p className={styles["submit__note"]}>Complete the required (*) fields and accept the rules to submit.</p> : null}
       </div>
     </form>
   );
