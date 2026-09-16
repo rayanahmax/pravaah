@@ -125,6 +125,13 @@
   color: var(--muted);
   font-size: 11.5px;
 }
+/* The tagline plus the account action do not fit a phone width and collided. On
+   narrow screens the wordmark alone carries the brand. */
+@media (max-width: 560px) {
+  .brandText small {
+    display: none;
+  }
+}
 
 .barActions {
   display: flex;

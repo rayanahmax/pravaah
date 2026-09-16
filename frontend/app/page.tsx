@@ -83,16 +83,7 @@ export default async function LandingPage() {
                   Sign out
                 </Link>
               </>
-            ) : (
-              <>
-                <Link href="/login" className={styles.barGhost}>
-                  Sign in
-                </Link>
-                <Link href="/register" className={styles.barCta}>
-                  Create account
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
