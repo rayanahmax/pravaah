@@ -13,6 +13,7 @@ import {
   TicketCheck,
 } from "lucide-react";
 import { getProfile } from "@/lib/auth";
+import { isDemoMode } from "@/lib/demo";
 import "./tourist-motion.css";
 import styles from "./landing.module.css";
 
@@ -150,6 +151,41 @@ export default async function LandingPage() {
             </svg>
           </div>
         </section>
+
+        {isDemoMode() ? (
+          <section className={styles.demo} aria-labelledby="demo-heading">
+            <div className={styles["demo__inner"]}>
+              <div className={styles["demo__lead"]}>
+                <p className={styles["demo__eyebrow"]}>
+                  <ShieldCheck size={14} aria-hidden="true" /> Live demo
+                </p>
+                <h2 id="demo-heading" className={styles["demo__title"]}>
+                  Test the app without signing up
+                </h2>
+                <p className={styles["demo__sub"]}>
+                  Pick a role and you are signed straight in to a ready-made account, with real
+                  data you can click through. No email, no password to create.
+                </p>
+              </div>
+              <div className={styles["demo__row"]}>
+                <Link href="/api/v1/auth/demo?role=tourist" className={styles.cta}>
+                  <CircleUserRound size={17} aria-hidden="true" /> Test as a visitor
+                  <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+                <Link href="/api/v1/auth/demo?role=operator" className={styles.ctaAlt}>
+                  <Building2 size={17} aria-hidden="true" /> Test as department staff
+                  <ArrowRight size={17} aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+            <p className={styles["demo__note"]}>
+              <Info size={14} aria-hidden="true" />
+              Both demo accounts are shared, so anything you do is visible to the next person
+              testing. Request a permit as the visitor, then approve it and scan the QR pass as
+              staff to see the full flow.
+            </p>
+          </section>
+        ) : null}
 
         <section className={styles.choice} aria-labelledby="choose-heading">
           <div>
