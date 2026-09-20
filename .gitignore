@@ -30,6 +30,13 @@ build/
 /probe-*.mjs
 /verify-*.mjs
 
+# --- SIH portal deliverables (uploaded to the portal directly, kept out of the repo) ---
+# Product/architecture docs, the AI development rulebook and the ui-ux skill are
+# submitted via the SIH portal, so they are intentionally not tracked here.
+/docs/
+/AGENTS.md
+/.opencode/
+
 # --- OS and editor ---
 .DS_Store
 Thumbs.db
