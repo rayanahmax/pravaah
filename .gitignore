@@ -5,8 +5,10 @@ out/
 build/
 
 # --- secrets and local environment ---
-# Committed by accident, a leaked key is still live: Supabase API keys and the
-# Postgres password all work against the hosted project.
+# Never commit real credentials. The Supabase anon/service_role keys and the
+# Postgres password live only in .env.local (and .env.*), which stay ignored.
+# A scan of the full git history confirmed no secret values were ever committed;
+# frontend/.env.local.example shows the expected placeholder shape.
 .env
 .env.*
 # These re-includes only reach a root-level example file. A nested .gitignore's
