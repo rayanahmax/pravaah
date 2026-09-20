@@ -144,6 +144,22 @@ Run from `frontend/`.
 
 See [`frontend/DEPLOYMENT.md`](frontend/DEPLOYMENT.md) for the production environment checklist and the Vercel root-directory note.
 
+## Demo mode (for reviewers)
+
+To let evaluators try the app without creating an account, set these environment
+variables on the deployment:
+
+- `DEMO_MODE=true`
+- `DEMO_TOURIST_EMAIL` and `DEMO_TOURIST_PASSWORD`
+- `DEMO_OPERATOR_EMAIL` and `DEMO_OPERATOR_PASSWORD`
+
+Then run `node supabase/seed-demo.js` (from `frontend/`) once against the same
+Supabase project. It creates the two throwaway accounts and a realistic set of
+permits on a dedicated demo destination. The landing page then shows "Test the
+app" buttons that sign a reviewer straight in as a visitor or as department
+staff. When `DEMO_MODE` is not set, the buttons and the sign-in route are
+disabled and the app uses normal login only.
+
 ## License
 
 No license file is included yet. Add one before publishing if the submission requires it.
